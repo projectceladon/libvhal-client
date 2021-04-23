@@ -1,0 +1,1 @@
+# VHAL Client library (in C++) for Audio/Camera/Sensor.
