@@ -65,7 +65,7 @@ public:
 
     size_t Send(const uint8_t* data, size_t size)
     {
-        size_t sent;
+        ssize_t sent;
         if ((sent = ::send(fd_, data, size, 0)) == -1) {
             throw std::system_error(errno, std::system_category());
         }
@@ -74,7 +74,7 @@ public:
 
     size_t Recv(uint8_t* data, size_t size)
     {
-        size_t received;
+        ssize_t received;
         if ((received = ::recv(fd_, data, size, 0)) == -1) {
             throw std::system_error(errno, std::system_category());
         }
