@@ -1,0 +1,10 @@
+BasedOnStyle: Mozilla
+AccessModifierOffset: -4
+IndentWidth: 4
+Standard: Cpp11
+AllowAllArgumentsOnNextLine: false
+AlignConsecutiveAssignments: true
+FixNamespaceComments: true
+AlignConsecutiveDeclarations: true
+ColumnLimit: 80
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
