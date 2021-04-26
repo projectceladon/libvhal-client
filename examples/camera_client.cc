@@ -1,5 +1,5 @@
 
-#include "unix_socket.h"
+#include "unix_stream_socket_client.h"
 #include <array>
 #include <chrono>
 #include <cstdio>
@@ -74,26 +74,31 @@ main(int argc, char** argv)
     }
 
     try {
-        UnixSocket  socket;
-        std::string sock_path = argv[2];
+        UnixStreamSocketClient socket_client(argv[2]);
 
-        socket.Connect(move(sock_path));
+        auto [connected, conn_err_msg] = socket_client.Connect();
+        if (!connected) {
+            std::cout << "Connect() failed due to " << conn_err_msg << "\n";
+            exit(EXIT_FAILURE);
+        }
 
         std::cout << "Waiting for CMD_OPEN_CAMERA\n";
 
         camera_socket_info_t camera_sock_info;
 
-        size_t ret;
-
-        if ((ret = socket.Recv(reinterpret_cast<uint8_t*>(&camera_sock_info),
-                               sizeof(camera_sock_info))) &&
-            camera_sock_info.cmd == CMD_OPEN_CAMERA) {
-
+        auto [received, recv_err_msg] =
+          socket_client.Recv(reinterpret_cast<uint8_t*>(&camera_sock_info),
+                             sizeof(camera_sock_info));
+        if (received <= 0) {
+            cout << "Recv() failed due to " << recv_err_msg << "\n";
+            exit(EXIT_FAILURE);
+        }
+        if (camera_sock_info.cmd == CMD_OPEN_CAMERA) {
             cout << "Received CMD_OPEN_CAMERA\n";
 
             const size_t kSize = INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE;
             std::array<uint8_t, kSize> inbuf = { 0 };
-            size_t                     data_size;
+            ssize_t                    data_size;
 
             while (true) {
                 data_size = fread(inbuf.data(), 1, kSize, f);
@@ -109,19 +114,26 @@ main(int argc, char** argv)
                     }
                 }
                 // send size
-                if (socket.Send((uint8_t*)&data_size, sizeof(size_t)) ==
-                    sizeof(size_t)) {
-                    cout << "Sent " << sizeof(size_t) << " bytes to VHal\n";
-                    // send data
-                    if (socket.Send(inbuf.data(), data_size) == data_size) {
-                        cout << "Sent " << data_size << " bytes to VHal\n";
-                    }
-                    cout << ">>>>>> Sending frames at 30fps...\n";
-                    std::this_thread::sleep_for(33ms);
+                if (auto [sent, send_err_msg] =
+                      socket_client.Send((uint8_t*)&data_size, sizeof(size_t));
+                    sent != sizeof(size_t)) {
+                    cout << "Send() failed due to " << send_err_msg << "\n";
+                    break;
                 }
+                cout << "Sent " << sizeof(size_t) << " bytes to VHal\n";
+                // send data
+                if (auto [sent, send_err_msg] =
+                      socket_client.Send(inbuf.data(), data_size);
+                    sent != data_size) {
+                    cout << "Send() failed due to " << send_err_msg << "\n";
+                    break;
+                }
+                cout << "Sent " << data_size << " bytes to VHal\n";
+                cout << ">>>>>> Sending frames at 30fps...\n";
+                std::this_thread::sleep_for(33ms);
             }
         } else if (camera_sock_info.cmd == CMD_CLOSE_CAMERA) {
-            cout << "Received CMD_CLOSE_CAMERA\n";
+            cout << "Received CMD_CLOSE_CAMERA, exit\n";
         }
 
         fclose(f);
