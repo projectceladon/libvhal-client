@@ -1,4 +1,4 @@
-list (APPEND SOURCES unix_socket.cc)
+list (APPEND SOURCES unix_stream_socket_client.cc)
 
 # Build libvhal-client
 add_library(${PROJECT_NAME} SHARED ${SOURCES})

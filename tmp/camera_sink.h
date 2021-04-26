@@ -19,18 +19,20 @@
  * limitations under the License.
  *
  */
-#include "unix_socket.h"
+#include "istream_socket.h"
 #include <functional>
 #include <memory>
+#include <sys/types.h>
 
 namespace vhal {
 namespace client {
 
 /**
- * @brief
+ * @brief Class that acts as a pipe between Camera client and VHAL.
+ * Camera client writes encoded video packet to the pipe and
  *
  */
-class CameraSink
+class VideoPipeSink
 {
 public:
     /**
@@ -55,10 +57,10 @@ public:
     };
 
     /**
-     * @brief
+     * @brief Camera capabilities that needs to be supported by Remote camera.
      *
      */
-    struct FrameInfo
+    struct VideoParams
     {
         VideoCodecType  codec_type = VideoCodecType::kH265;
         FrameResolution resolution = FrameResolution::k480p;
@@ -66,7 +68,7 @@ public:
     };
 
     /**
-     * @brief
+     * @brief Camera operation commands sent by Camera VHAL to client.
      *
      */
     enum class Command
@@ -77,7 +79,7 @@ public:
     };
 
     /**
-     * @brief
+     * @brief Camera VHAL version.
      *
      */
     enum class VHalVersion
@@ -87,43 +89,60 @@ public:
     };
 
     /**
-     * @brief Camera control message sent by Camera VHAL
+     * @brief Camera control message sent by Camera VHAL to client.
      *
      */
     struct CtrlMessage
     {
         VHalVersion version = VHalVersion::kV2;
         Command     cmd     = Command::kNone;
-        FrameInfo   frame_info;
+        VideoParams video_params;
     };
 
     /**
-     * @brief
+     * @brief Type of the Camera callback which Camera VHAL triggers for
+     * OpenCamera and CloseCamera cases.
      *
      */
     using CameraCallback = std::function<void(const CtrlMessage& ctrl_msg)>;
 
     /**
-     * @brief Construct a new Camera Sink object
+     * @brief Construct a new Video Pipe Sink object
      *
-     * @param socket
+     * @param socket Stream socket that handles VHAL transaction.
+     * Currently only Stream socket types are supported.
+     * @param callback Callback that is triggered by VHAL for OpenCamera and
+     * CloseCamera cases.
      */
-    CameraSink(std::unique_ptr<UnixSocket> socket, CameraCallback cb = nullptr);
+    VideoPipeSink(std::unique_ptr<IStreamSocket> socket,
+                  CameraCallback                 callback = nullptr);
 
     /**
-     * @brief Destroy the Camera Sink object
+     * @brief Destroy the Video Pipe Sink object
      *
      */
-    ~CameraSink();
+    ~VideoPipeSink();
 
     /**
-     * @brief Set the Callback Handler object
+     * @brief Registers Camera callback.
      *
-     * @param cb
-     * @return true
-     * @return false
+     * @param callback Camera callback function object or lambda or function
+     * pointer.
+     *
+     * @return true Camera callback registered successfully.
+     * @return false Camera callback failed to register.
      */
-    bool SetCallbackHandler(CameraCallback cb);
+    bool RegisterCallback(CameraCallback callback);
+
+    /**
+     * @brief Write an encoded Camera packet to VHAL.
+     *
+     * @param packet Encoded Camera packet.
+     * @param size Size of the Camera packet.
+     *
+     * @return ssize_t No of bytes written to VHAL, -1 if failure.
+     */
+    ssize_t WritePacket(const uint8_t* packet, size_t size);
 
 private:
     class Impl;

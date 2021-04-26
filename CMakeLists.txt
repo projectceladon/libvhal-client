@@ -5,7 +5,7 @@ message(STATUS "Project name: ${PROJECT_NAME}")
 
 set (TARGET_OS "linux")
 set (CMAKE_BUILD_TYPE Release)
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat -Wformat-security -Werror=format-security \
                      -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fPIE -fPIC -Wall")
 set (CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
