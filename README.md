@@ -3,11 +3,10 @@
 ## Build steps
 
 ```
-mkdir build
-cd build
+shakthi@mypc build (master) mkdir build
+shakthi@mypc build (master) cd build
+shakthi@mypc build (master) $ cmake ..
 
-
-shakthi@Lenovo-Yoga-C740-14IML build (master) $ cmake ..
 -- The CXX compiler identification is GNU 7.5.0
 -- Check for working CXX compiler: /usr/bin/c++
 -- Check for working CXX compiler: /usr/bin/c++ -- works
@@ -30,6 +29,7 @@ shakthi@Lenovo-Yoga-C740-14IML build (master) $ cmake ..
 -- Build files have been written to: /home/shakthi/gitlab/libvhal-client/build
 
 shakthi@Lenovo-Yoga-C740-14IML build (master) $ cmake --build .
+
 Scanning dependencies of target vhal-client
 [ 14%] Building CXX object source/CMakeFiles/vhal-client.dir/unix_stream_socket_client.cc.o
 [ 28%] Building CXX object source/CMakeFiles/vhal-client.dir/vhal_video_sink.cc.o
