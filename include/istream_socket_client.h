@@ -72,6 +72,13 @@ public:
     virtual bool Connected() const = 0;
 
     /**
+     * @brief Get the Native Socket Fd object
+     *
+     * @return int
+     */
+    virtual int GetNativeSocketFd() const = 0;
+
+    /**
      * @brief
      *
      * @param data

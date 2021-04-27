@@ -69,6 +69,8 @@ public:
 
     bool Connected() const { return connected_; }
 
+    int GetNativeSocketFd() const { return fd_; }
+
     IStreamSocketClient::IOResult Send(const uint8_t* data, size_t size)
     {
         std::string error_msg = "";

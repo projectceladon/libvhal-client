@@ -1,60 +1,49 @@
+/**
+ * @file camera_client.cc
+ * @author Shakthi Prashanth M (shakthi.prashanth.m@intel.com)
+ * @brief
+ * @version 1.0
+ * @date 2021-04-27
+ *
+ * Copyright (c) 2021 Intel Corporation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 
 #include "unix_stream_socket_client.h"
+#include "vhal_video_sink.h"
 #include <array>
+#include <atomic>
 #include <chrono>
-#include <cstdio>
-#include <cstring>
+#include <fstream>
 #include <iostream>
-#include <stdexcept>
+#include <memory>
 #include <string>
-#include <system_error>
 #include <thread>
 
 using namespace std::chrono_literals;
-using namespace std;
 using namespace vhal::client;
-
-// This definition should be aligned with camera vHAL
-
-struct camera_socket_configuration_info_t
-{
-    uint32_t codec_type;
-    uint32_t resolution;
-    uint32_t reserved[4];
-};
-
-enum camera_cmd_t
-{
-    CMD_OPEN_CAMERA  = 11,
-    CMD_CLOSE_CAMERA = 12,
-};
-
-enum camera_vhal_version_t
-{
-    CAMERA_VHAL_VERSION_0 = 0, // decode out of camera vhal
-    CAMERA_VHAL_VERSION_1 = 1, // decode in camera vhal
-};
-
-struct camera_socket_info_t
-{
-    camera_vhal_version_t              version;
-    camera_cmd_t                       cmd;
-    camera_socket_configuration_info_t config;
-};
-
-#define AV_INPUT_BUFFER_PADDING_SIZE 64
-
-#define INBUF_SIZE (4 * 1024)
+using namespace std;
 
 static void
-usage(char** argv)
+usage(string program_name)
 {
-    fprintf(stderr,
-            "\tUsage:   %s <filename> <vhal-sock-path>\n"
-            "\tExample: %s test.h265 /ipc/camdec-sock-0"
-            "frames\n",
-            argv[0],
-            argv[0]);
+    cout << "\tUsage:   " << program_name
+         << " <filename> <vhal-sock-path>\n"
+            "\tExample: "
+         << program_name
+         << " test.h265 /ipc/camdec-sock-0"
+            "frames\n";
     return;
 }
 
@@ -62,84 +51,101 @@ int
 main(int argc, char** argv)
 {
     if (argc < 3) {
-        usage(argv);
-        exit(1);
-    }
-    const char* filename = argv[1];
-
-    FILE* f = fopen(filename, "rb");
-    if (!f) {
-        fprintf(stderr, "Could not open %s\n", filename);
+        usage(argv[0]);
         exit(1);
     }
 
-    try {
-        UnixStreamSocketClient socket_client(argv[2]);
+    string       socket_path(argv[2]);
+    string       filename = argv[1];
+    atomic<bool> stop     = false;
+    thread       file_src_thread;
 
-        auto [connected, conn_err_msg] = socket_client.Connect();
-        if (!connected) {
-            std::cout << "Connect() failed due to " << conn_err_msg << "\n";
-            exit(EXIT_FAILURE);
-        }
+    auto unix_sock_client =
+      make_unique<UnixStreamSocketClient>(move(socket_path));
 
-        std::cout << "Waiting for CMD_OPEN_CAMERA\n";
+    VHalVideoSink vhal_video_sink(move(unix_sock_client));
 
-        camera_socket_info_t camera_sock_info;
+    cout << "Waiting Camera Open callback..\n";
+    vhal_video_sink.RegisterCallback(
+      [&](const VHalVideoSink::CtrlMessage& ctrl_msg) {
+          switch (ctrl_msg.cmd) {
+              case VHalVideoSink::Command::kOpen:
+                  cout << "Received Open command from Camera VHal\n";
+                  file_src_thread = thread([&stop,
+                                            &vhal_video_sink,
+                                            &filename]() {
+                      // open file for reading
+                      fstream istrm(filename, istrm.binary | istrm.in);
+                      if (!istrm.is_open()) {
+                          cout << "Failed to open " << filename << '\n';
+                          exit(1);
+                      }
+                      cout << "Will start reading from file: " << filename
+                           << '\n';
+                      const size_t av_input_buffer_padding_size = 64;
+                      const size_t inbuf_size                   = 4 * 1024;
+                      array<uint8_t, inbuf_size + av_input_buffer_padding_size>
+                        inbuf;
+                      while (!stop) {
+                          istrm.read(reinterpret_cast<char*>(inbuf.data()),
+                                     inbuf_size); // binary input
+                          if (!istrm.gcount() or istrm.eof()) {
+                              //   istrm.clear();
+                              //   istrm.seekg(0);
+                              istrm.close();
+                              istrm.open(filename, istrm.binary | istrm.in);
+                              if (!istrm.is_open()) {
+                                  cout << "Failed to open " << filename << '\n';
+                                  exit(1);
+                              }
+                              cout << "Closed and re-opened file: " << filename
+                                   << "\n";
+                              continue;
+                          }
 
-        auto [received, recv_err_msg] =
-          socket_client.Recv(reinterpret_cast<uint8_t*>(&camera_sock_info),
-                             sizeof(camera_sock_info));
-        if (received <= 0) {
-            cout << "Recv() failed due to " << recv_err_msg << "\n";
-            exit(EXIT_FAILURE);
-        }
-        if (camera_sock_info.cmd == CMD_OPEN_CAMERA) {
-            cout << "Received CMD_OPEN_CAMERA\n";
+                          // Write payload size
+                          if (auto [sent, error_msg] =
+                                vhal_video_sink.WritePacket(
+                                  (uint8_t*)&inbuf_size,
+                                  sizeof(inbuf_size));
+                              sent < 0) {
+                              cout << "Error in writing payload size to "
+                                      "Camera VHal: "
+                                   << error_msg << "\n";
+                              exit(1);
+                          }
 
-            const size_t kSize = INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE;
-            std::array<uint8_t, kSize> inbuf = { 0 };
-            ssize_t                    data_size;
+                          // Write payload
+                          if (auto [sent, error_msg] =
+                                vhal_video_sink.WritePacket(inbuf.data(),
+                                                            inbuf_size);
+                              sent < 0) {
+                              cout
+                                << "Error in writing payload to Camera VHal: "
+                                << error_msg << "\n";
+                              exit(1);
+                          }
+                          cout << "[rate=30fps] Sent " << istrm.gcount()
+                               << " bytes to Camera VHal.\n";
+                          // sleep for 33ms to maintain 30 fps
+                          this_thread::sleep_for(33ms);
+                      }
+                  });
+                  break;
+              case VHalVideoSink::Command::kClose:
+                  cout << "Received Close command from Camera VHal\n";
+                  stop = false;
+                  file_src_thread.join();
+                  exit(0);
+              default:
+                  cout << "Unknown Command received, exiting with failure\n";
+                  exit(1);
+          }
+      });
 
-            while (true) {
-                data_size = fread(inbuf.data(), 1, kSize, f);
-                if (data_size == 0) {
-                    if (feof(f)) {
-                        cout << "File eof reached, restart\n";
-                        rewind(f);
-                        continue;
-                    } else if (ferror(f)) {
-                        cout << "File error occurred, exitint error "
-                             << strerror(errno) << "\n";
-                        break;
-                    }
-                }
-                // send size
-                if (auto [sent, send_err_msg] =
-                      socket_client.Send((uint8_t*)&data_size, sizeof(size_t));
-                    sent != sizeof(size_t)) {
-                    cout << "Send() failed due to " << send_err_msg << "\n";
-                    break;
-                }
-                cout << "Sent " << sizeof(size_t) << " bytes to VHal\n";
-                // send data
-                if (auto [sent, send_err_msg] =
-                      socket_client.Send(inbuf.data(), data_size);
-                    sent != data_size) {
-                    cout << "Send() failed due to " << send_err_msg << "\n";
-                    break;
-                }
-                cout << "Sent " << data_size << " bytes to VHal\n";
-                cout << ">>>>>> Sending frames at 30fps...\n";
-                std::this_thread::sleep_for(33ms);
-            }
-        } else if (camera_sock_info.cmd == CMD_CLOSE_CAMERA) {
-            cout << "Received CMD_CLOSE_CAMERA, exit\n";
-        }
-
-        fclose(f);
-    } catch (const std::system_error& error) {
-        std::cout << "Error: " << error.code() << " - "
-                  << error.code().message() << '\n';
+    // we need to be alive :)
+    while (true) {
+        this_thread::sleep_for(5ms);
     }
 
     return 0;
