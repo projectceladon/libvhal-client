@@ -1,7 +1,11 @@
+find_package( Threads )
 list (APPEND SOURCES unix_stream_socket_client.cc)
+list (APPEND SOURCES vhal_video_sink.cc)
 
 # Build libvhal-client
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
+
+target_link_libraries( ${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} )
 
 # Make sure the compiler can find include files for vhal-client library
 # when other libraries or executables link to vhal-client

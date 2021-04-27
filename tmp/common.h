@@ -23,14 +23,6 @@
 #define COMMON_H
 
 namespace vhal {
-namespace client {
-
-enum class SocketFamily
-{
-    kUnix,
-    kInet,
-    kVSock
-};
-}
+namespace client {}
 } // namespace vhal
 #endif /* COMMON_H */
