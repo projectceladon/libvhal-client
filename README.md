@@ -44,3 +44,6 @@ Scanning dependencies of target camera_client
 [100%] Linking CXX executable ../../bins/linux/camera_client
 [100%] Built target camera_client
 ```
+
+## Architecture
+![libvhal-client System view](docs/libvhal-client_system_view.png)
