@@ -1,4 +1,4 @@
-# VHAL Client library (in C++) for Audio/Camera/Sensor.
+# VHAL Client library (written in C++17) for Audio/Camera/Sensor.
 
 ## Build steps
 
