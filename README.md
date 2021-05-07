@@ -45,12 +45,14 @@ Scanning dependencies of target camera_client
 [100%] Built target camera_client
 ```
 
-## Architecture
-![libvhal-client System view](docs/libvhal-client_system_view.png)
-
 ## Camera
 
 Camera VHal runs UNIX/VSOCK socket server. VHAL Client should connect to socket server path or address/port endpoint.
+
+### Architecture
+![libvhal-client System view](docs/libvhal-client_system_view.png)
+
+### How to talk to Camera VHal ?
 Camera VHal client might do following steps.
 
 Create a socket client (say, UNIX):
