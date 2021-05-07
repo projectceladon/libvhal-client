@@ -88,3 +88,9 @@ vhal_video_sink.RegisterCallback(
           }
 });
 ```
+
+## Audio
+TODO
+
+## Sensor
+TODO
