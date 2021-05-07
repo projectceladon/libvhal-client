@@ -47,3 +47,44 @@ Scanning dependencies of target camera_client
 
 ## Architecture
 ![libvhal-client System view](docs/libvhal-client_system_view.png)
+
+## Camera
+
+Camera VHal runs UNIX/VSOCK socket server. VHAL Client should connect to socket server path or address/port endpoint.
+Camera VHal client might do following steps.
+
+Create a socket client (say, UNIX):
+```cpp
+auto unix_sock_client = make_unique<UnixStreamSocketClient>(move(socket_path));
+```
+
+Handover socket client to `VHalVideoSink` that talks to Camera VHal.
+```cpp
+VHalVideoSink vhal_video_sink(move(unix_sock_client));
+```
+
+Register with `VHalVideoSink` for Camera open/close callbacks as below:
+```cpp
+vhal_video_sink.RegisterCallback(
+      [&](const VHalVideoSink::CtrlMessage& ctrl_msg) {
+          switch (ctrl_msg.cmd) {
+              case VHalVideoSink::Command::kOpen:
+              auto video_params = ctrl_msg.video_params;
+              auto codec_type   = video_params.codec_type;
+              auto frame_res    = video_params.resolution;
+
+              // Make sure to interpret codec type and frame resolution and
+              // provide video input that match these params.
+              // For ex: Currently supported codec type is `VHalVideoSink::VideoCodecType::kH264`.
+              // If codec type is kH264, then make sure to input only h264 packets.
+              // And if frame resolution is k480p, make sure to have the same resolution.
+
+              // Start backend camera source that will provide camera data.
+              break;
+              
+              case VHalVideoSink::Command::kClose:
+              // Stop backend camera source.
+              break;
+          }
+});
+```
