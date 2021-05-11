@@ -47,7 +47,6 @@ public:
     enum class VideoCodecType
     {
         kH264 = 0,
-        kH265
     };
 
     /**
@@ -67,7 +66,7 @@ public:
      */
     struct VideoParams
     {
-        VideoCodecType  codec_type = VideoCodecType::kH265;
+        VideoCodecType  codec_type = VideoCodecType::kH264;
         FrameResolution resolution = FrameResolution::k480p;
         uint32_t        reserved[4];
     };
