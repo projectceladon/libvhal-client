@@ -59,6 +59,7 @@ public:
                         cout << "Failed to connect to VHal: " << error_msg
                              << ". Retry after 3ms...\n";
                         this_thread::sleep_for(3ms);
+                        continue;
                     }
                 }
                 // connected ...
@@ -98,6 +99,7 @@ public:
                             continue;
                             // FIXME: What to do ?? Exit ?
                         }
+                        // success, invoke client callback
                         callback_(cref(ctrl_msg));
                     }
                 } while (true);

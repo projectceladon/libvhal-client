@@ -1,4 +1,8 @@
 find_package( Threads )
+
+include_directories (
+	"${CMAKE_CURRENT_SOURCE_DIR}"
+)
 list (APPEND SOURCES unix_stream_socket_client.cc)
 list (APPEND SOURCES vhal_video_sink.cc)
 

@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.0)
-project (vhal-client VERSION 1.0 DESCRIPTION "VHAL Client library for Audio, Camera and Sensor" LANGUAGES CXX)
+project (vhal-client VERSION 1.0 DESCRIPTION "VHAL Client library written in C++17 for Audio, Camera and Sensor" LANGUAGES CXX)
 
 message(STATUS "Project name: ${PROJECT_NAME}")
 
@@ -16,7 +16,6 @@ set (CMAKE_EXE_LINKER_FLAGS "${LINK_FLAGS}")
 set (CMAKE_SHARED_LINKER_FLAGS "${LINK_FLAGS}")
 
 include_directories (
-	"${CMAKE_CURRENT_SOURCE_DIR}/"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/"
 )
 

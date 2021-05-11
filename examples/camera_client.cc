@@ -66,11 +66,25 @@ main(int argc, char** argv)
     VHalVideoSink vhal_video_sink(move(unix_sock_client));
 
     cout << "Waiting Camera Open callback..\n";
+
     vhal_video_sink.RegisterCallback(
       [&](const VHalVideoSink::CtrlMessage& ctrl_msg) {
           switch (ctrl_msg.cmd) {
-              case VHalVideoSink::Command::kOpen:
+              case VHalVideoSink::Command::kOpen: {
                   cout << "Received Open command from Camera VHal\n";
+                  auto video_params = ctrl_msg.video_params;
+                  auto codec_type   = video_params.codec_type;
+                  auto frame_res    = video_params.resolution;
+
+                  // Make sure to interpret codec type and frame resolution and
+                  // provide video input that match these params.
+                  // For ex: Currently supported codec type is
+                  // `VHalVideoSink::VideoCodecType::kH264`. If codec type is
+                  // kH264, then make sure to input only h264 packets. And if
+                  // frame resolution is k480p, make sure to have the same
+                  // resolution.
+
+                  // Start thread that is going to push video input
                   file_src_thread = thread([&stop,
                                             &vhal_video_sink,
                                             &filename]() {
@@ -132,9 +146,10 @@ main(int argc, char** argv)
                       }
                   });
                   break;
+              }
               case VHalVideoSink::Command::kClose:
                   cout << "Received Close command from Camera VHal\n";
-                  stop = false;
+                  stop = true;
                   file_src_thread.join();
                   exit(0);
               default:
