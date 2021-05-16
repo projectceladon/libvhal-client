@@ -47,6 +47,7 @@ public:
     enum class VideoCodecType
     {
         kH264 = 0,
+        kI420
     };
 
     /**
