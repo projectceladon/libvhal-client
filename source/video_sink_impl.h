@@ -1,7 +1,7 @@
-#ifndef VHAL_VIDEO_SINK_IMPL_H
-#define VHAL_VIDEO_SINK_IMPL_H
+#ifndef VIDEO_SINK_IMPL_H
+#define VIDEO_SINK_IMPL_H
 /**
- * @file vhal_video_sink_impl.h
+ * @file video_sink_impl.h
  * @author Shakthi Prashanth M (shakthi.prashanth.m@intel.com)
  * @brief
  * @version 1.0
@@ -22,7 +22,7 @@
  *
  */
 #include "istream_socket_client.h"
-#include "vhal_video_sink.h"
+#include "video_sink.h"
 #include <atomic>
 #include <chrono>
 #include <functional>
@@ -45,7 +45,7 @@ using namespace chrono_literals;
 namespace vhal {
 namespace client {
 
-class VHalVideoSink::Impl
+class VideoSink::Impl
 {
 public:
     Impl(unique_ptr<IStreamSocketClient> socket_client)
@@ -84,17 +84,16 @@ public:
                     if (fds[0].revents & POLLIN) {
                         cout << "Camera VHal has some message for us!\n";
 
-                        VHalVideoSink::CtrlMessage ctrl_msg;
+                        VideoSink::CtrlMessage ctrl_msg;
 
                         if (auto [received, recv_err_msg] =
                               socket_client_->Recv(
                                 reinterpret_cast<uint8_t*>(&ctrl_msg),
                                 sizeof(ctrl_msg));
-                            received != sizeof(VHalVideoSink::CtrlMessage)) {
-                            cout
-                              << "Failed to read message from VHalVideoSink: "
-                              << recv_err_msg
-                              << ", going to disconnect and reconnect.\n";
+                            received != sizeof(VideoSink::CtrlMessage)) {
+                            cout << "Failed to read message from VideoSink: "
+                                 << recv_err_msg
+                                 << ", going to disconnect and reconnect.\n";
                             socket_client_->Close();
                             continue;
                             // FIXME: What to do ?? Exit ?
@@ -121,7 +120,7 @@ public:
 
     // atomic<bool> ShouldContinue() const { return should_continue_; }
 
-    VHalVideoSink::IOResult WritePacket(const uint8_t* packet, size_t size)
+    VideoSink::IOResult WritePacket(const uint8_t* packet, size_t size)
     {
         if (auto [sent, error_msg] = socket_client_->Send(packet, size);
             sent == -1)

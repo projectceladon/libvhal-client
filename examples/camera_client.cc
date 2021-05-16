@@ -21,7 +21,7 @@
  */
 
 #include "unix_stream_socket_client.h"
-#include "vhal_video_sink.h"
+#include "video_sink.h"
 #include <array>
 #include <atomic>
 #include <chrono>
@@ -63,100 +63,94 @@ main(int argc, char** argv)
     auto unix_sock_client =
       make_unique<UnixStreamSocketClient>(move(socket_path));
 
-    VHalVideoSink vhal_video_sink(move(unix_sock_client));
+    VideoSink video_sink(move(unix_sock_client));
 
     cout << "Waiting Camera Open callback..\n";
 
-    vhal_video_sink.RegisterCallback(
-      [&](const VHalVideoSink::CtrlMessage& ctrl_msg) {
-          switch (ctrl_msg.cmd) {
-              case VHalVideoSink::Command::kOpen: {
-                  cout << "Received Open command from Camera VHal\n";
-                  auto video_params = ctrl_msg.video_params;
-                  auto codec_type   = video_params.codec_type;
-                  auto frame_res    = video_params.resolution;
+    video_sink.RegisterCallback([&](const VideoSink::CtrlMessage& ctrl_msg) {
+        switch (ctrl_msg.cmd) {
+            case VideoSink::Command::kOpen: {
+                cout << "Received Open command from Camera VHal\n";
+                auto video_params = ctrl_msg.video_params;
+                auto codec_type   = video_params.codec_type;
+                auto frame_res    = video_params.resolution;
 
-                  // Make sure to interpret codec type and frame resolution and
-                  // provide video input that match these params.
-                  // For ex: Currently supported codec type is
-                  // `VHalVideoSink::VideoCodecType::kH264`. If codec type is
-                  // kH264, then make sure to input only h264 packets. And if
-                  // frame resolution is k480p, make sure to have the same
-                  // resolution.
+                // Make sure to interpret codec type and frame resolution and
+                // provide video input that match these params.
+                // For ex: Currently supported codec type is
+                // `VideoSink::VideoCodecType::kH264`. If codec type is
+                // kH264, then make sure to input only h264 packets. And if
+                // frame resolution is k480p, make sure to have the same
+                // resolution.
 
-                  // Start thread that is going to push video input
-                  file_src_thread = thread([&stop,
-                                            &vhal_video_sink,
-                                            &filename]() {
-                      // open file for reading
-                      fstream istrm(filename, istrm.binary | istrm.in);
-                      if (!istrm.is_open()) {
-                          cout << "Failed to open " << filename << '\n';
-                          exit(1);
-                      }
-                      cout << "Will start reading from file: " << filename
-                           << '\n';
-                      const size_t av_input_buffer_padding_size = 64;
-                      const size_t inbuf_size                   = 4 * 1024;
-                      array<uint8_t, inbuf_size + av_input_buffer_padding_size>
-                        inbuf;
-                      while (!stop) {
-                          istrm.read(reinterpret_cast<char*>(inbuf.data()),
-                                     inbuf_size); // binary input
-                          if (!istrm.gcount() or istrm.eof()) {
-                              //   istrm.clear();
-                              //   istrm.seekg(0);
-                              istrm.close();
-                              istrm.open(filename, istrm.binary | istrm.in);
-                              if (!istrm.is_open()) {
-                                  cout << "Failed to open " << filename << '\n';
-                                  exit(1);
-                              }
-                              cout << "Closed and re-opened file: " << filename
-                                   << "\n";
-                              continue;
-                          }
+                // Start thread that is going to push video input
+                file_src_thread = thread([&stop, &video_sink, &filename]() {
+                    // open file for reading
+                    fstream istrm(filename, istrm.binary | istrm.in);
+                    if (!istrm.is_open()) {
+                        cout << "Failed to open " << filename << '\n';
+                        exit(1);
+                    }
+                    cout << "Will start reading from file: " << filename
+                         << '\n';
+                    const size_t av_input_buffer_padding_size = 64;
+                    const size_t inbuf_size                   = 4 * 1024;
+                    array<uint8_t, inbuf_size + av_input_buffer_padding_size>
+                      inbuf;
+                    while (!stop) {
+                        istrm.read(reinterpret_cast<char*>(inbuf.data()),
+                                   inbuf_size); // binary input
+                        if (!istrm.gcount() or istrm.eof()) {
+                            //   istrm.clear();
+                            //   istrm.seekg(0);
+                            istrm.close();
+                            istrm.open(filename, istrm.binary | istrm.in);
+                            if (!istrm.is_open()) {
+                                cout << "Failed to open " << filename << '\n';
+                                exit(1);
+                            }
+                            cout << "Closed and re-opened file: " << filename
+                                 << "\n";
+                            continue;
+                        }
 
-                          // Write payload size
-                          if (auto [sent, error_msg] =
-                                vhal_video_sink.WritePacket(
-                                  (uint8_t*)&inbuf_size,
-                                  sizeof(inbuf_size));
-                              sent < 0) {
-                              cout << "Error in writing payload size to "
-                                      "Camera VHal: "
-                                   << error_msg << "\n";
-                              exit(1);
-                          }
+                        // Write payload size
+                        if (auto [sent, error_msg] =
+                              video_sink.WritePacket((uint8_t*)&inbuf_size,
+                                                     sizeof(inbuf_size));
+                            sent < 0) {
+                            cout << "Error in writing payload size to "
+                                    "Camera VHal: "
+                                 << error_msg << "\n";
+                            exit(1);
+                        }
 
-                          // Write payload
-                          if (auto [sent, error_msg] =
-                                vhal_video_sink.WritePacket(inbuf.data(),
-                                                            inbuf_size);
-                              sent < 0) {
-                              cout
-                                << "Error in writing payload to Camera VHal: "
-                                << error_msg << "\n";
-                              exit(1);
-                          }
-                          cout << "[rate=30fps] Sent " << istrm.gcount()
-                               << " bytes to Camera VHal.\n";
-                          // sleep for 33ms to maintain 30 fps
-                          this_thread::sleep_for(33ms);
-                      }
-                  });
-                  break;
-              }
-              case VHalVideoSink::Command::kClose:
-                  cout << "Received Close command from Camera VHal\n";
-                  stop = true;
-                  file_src_thread.join();
-                  exit(0);
-              default:
-                  cout << "Unknown Command received, exiting with failure\n";
-                  exit(1);
-          }
-      });
+                        // Write payload
+                        if (auto [sent, error_msg] =
+                              video_sink.WritePacket(inbuf.data(), inbuf_size);
+                            sent < 0) {
+                            cout << "Error in writing payload to Camera VHal: "
+                                 << error_msg << "\n";
+                            exit(1);
+                        }
+                        cout << "[rate=30fps] Sent " << istrm.gcount()
+                             << " bytes to Camera VHal.\n";
+                        // sleep for 33ms to maintain 30 fps
+                        this_thread::sleep_for(33ms);
+                    }
+                });
+                break;
+            }
+            case VideoSink::Command::kClose:
+                cout << "Received Close command from Camera VHal\n";
+                stop = true;
+                file_src_thread.join();
+                exit(0);
+            default:
+                cout << "Unknown Command received, exiting with failure\n";
+                exit(1);
+        }
+    });
 
     // we need to be alive :)
     while (true) {

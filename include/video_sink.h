@@ -1,7 +1,7 @@
-#ifndef VHAL_VIDEO_SINK_H
-#define VHAL_VIDEO_SINK_H
+#ifndef VIDEO_SINK_H
+#define VIDEO_SINK_H
 /**
- * @file vhal_video_sink.h
+ * @file video_sink.h
  * @author Shakthi Prashanth M (shakthi.prashanth.m@intel.com)
  * @brief
  * @version 0.1
@@ -36,7 +36,7 @@ namespace client {
  * Camera client writes encoded video packet to the pipe and
  *
  */
-class VHalVideoSink
+class VideoSink
 {
 public:
     using IOResult = std::tuple<ssize_t, std::string>;
@@ -112,20 +112,20 @@ public:
     using CameraCallback = std::function<void(const CtrlMessage& ctrl_msg)>;
 
     /**
-     * @brief Construct a new VHalVideoSink object
+     * @brief Construct a new VideoSink object
      *
      * @param socket_client Stream socket that handles VHAL transaction.
      * Currently only Stream socket types are supported.
      * @param callback Callback that is triggered by VHAL for OpenCamera and
      * CloseCamera cases.
      */
-    VHalVideoSink(std::unique_ptr<IStreamSocketClient> socket_client);
+    VideoSink(std::unique_ptr<IStreamSocketClient> socket_client);
 
     /**
-     * @brief Destroy the VHalVideoSink object
+     * @brief Destroy the VideoSink object
      *
      */
-    ~VHalVideoSink();
+    ~VideoSink();
 
     /**
      * @brief Registers Camera callback.
@@ -154,4 +154,4 @@ private:
 };
 } // namespace client
 } // namespace vhal
-#endif /* VHAL_VIDEO_SINK_H */
+#endif /* VIDEO_SINK_H */

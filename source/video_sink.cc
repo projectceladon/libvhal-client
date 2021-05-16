@@ -1,5 +1,5 @@
 /**
- * @file vhal_video_sink.cc
+ * @file video_sink.cc
  * @author Shakthi Prashanth M (shakthi.prashanth.m@intel.com)
  * @brief
  * @version 1.0
@@ -19,8 +19,8 @@
  * limitations under the License.
  *
  */
-#include "vhal_video_sink.h"
-#include "vhal_video_sink_impl.h"
+#include "video_sink.h"
+#include "video_sink_impl.h"
 #include <functional>
 #include <memory>
 #include <string>
@@ -29,20 +29,20 @@
 namespace vhal {
 namespace client {
 
-VHalVideoSink::VHalVideoSink(std::unique_ptr<IStreamSocketClient> socket)
+VideoSink::VideoSink(std::unique_ptr<IStreamSocketClient> socket)
   : impl_{ std::make_unique<Impl>(std::move(socket)) }
 {}
 
-VHalVideoSink::~VHalVideoSink() {}
+VideoSink::~VideoSink() {}
 
 bool
-VHalVideoSink::RegisterCallback(CameraCallback callback)
+VideoSink::RegisterCallback(CameraCallback callback)
 {
     return impl_->RegisterCallback(callback);
 }
 
-VHalVideoSink::IOResult
-VHalVideoSink::WritePacket(const uint8_t* packet, size_t size)
+VideoSink::IOResult
+VideoSink::WritePacket(const uint8_t* packet, size_t size)
 {
     return impl_->WritePacket(packet, size);
 }

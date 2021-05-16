@@ -21,7 +21,7 @@
  */
 
 #include "unix_stream_socket_client.h"
-#include "vhal_video_sink.h"
+#include "video_sink.h"
 #include <array>
 #include <atomic>
 #include <chrono>
@@ -61,61 +61,58 @@ main(int argc, char** argv)
 
     auto xx_sock_client = make_unique<XXStreamSocketClient>(move(socket_path));
 
-    VHalVideoSink vhal_video_sink(move(xx_sock_client));
+    VideoSink video_sink(move(xx_sock_client));
 
     cout << "Waiting Camera Open callback..\n";
 
-    vhal_video_sink.RegisterCallback(
-      [&](const VHalVideoSink::CtrlMessage& ctrl_msg) {
-          switch (ctrl_msg.cmd) {
-              case VHalVideoSink::Command::kOpen:
-                  cout << "Received Open command from Camera VHal\n";
-                  auto video_params = ctrl_msg.video_params;
-                  auto codec_type   = video_params.codec_type;
-                  auto frame_res    = video_params.resolution;
-                  // Request Backend to share camera data
-                  // with above video parames: codec type and frame resolution.
+    video_sink.RegisterCallback([&](const VideoSink::CtrlMessage& ctrl_msg) {
+        switch (ctrl_msg.cmd) {
+            case VideoSink::Command::kOpen:
+                cout << "Received Open command from Camera VHal\n";
+                auto video_params = ctrl_msg.video_params;
+                auto codec_type   = video_params.codec_type;
+                auto frame_res    = video_params.resolution;
+                // Request Backend to share camera data
+                // with above video parames: codec type and frame resolution.
 
-                  camera_backend.RegisterCallback(
-                    codec_type,
-                    frame_res,
-                    [&vhal_video_sink]() {
-                        if (codec_type != VHalVideoSink::VideoCodecType::I420) {
-                            // Write payload size
-                            if (auto [sent, error_msg] =
-                                  vhal_video_sink.WritePacket(
-                                    (uint8_t*)&inbuf_size,
-                                    sizeof(inbuf_size));
-                                sent < 0) {
-                                cout << "Error in writing payload size to "
-                                        "Camera VHal: "
-                                     << error_msg << "\n";
-                                exit(1);
-                            }
-                        }
+                camera_backend.RegisterCallback(
+                  codec_type,
+                  frame_res,
+                  [&video_sink]() {
+                      if (codec_type != VideoSink::VideoCodecType::I420) {
+                          // Write payload size
+                          if (auto [sent, error_msg] =
+                                video_sink.WritePacket((uint8_t*)&inbuf_size,
+                                                       sizeof(inbuf_size));
+                              sent < 0) {
+                              cout << "Error in writing payload size to "
+                                      "Camera VHal: "
+                                   << error_msg << "\n";
+                              exit(1);
+                          }
+                      }
 
-                        // Write payload
-                        if (auto [sent, error_msg] =
-                              vhal_video_sink.WritePacket(inbuf.data(),
-                                                          inbuf_size);
-                            sent < 0) {
-                            cout << "Error in writing payload to Camera VHal: "
-                                 << error_msg << "\n";
-                            exit(1);
-                        }
-                        cout << "[rate=30fps] Sent " << istrm.gcount()
-                             << " bytes to Camera VHal.\n";
-                    });
-                  break;
-              case VHalVideoSink::Command::kClose:
-                  cout << "Received Close command from Camera VHal\n";
-                  camera_backend(nullptr);
-                  exit(0);
-              default:
-                  cout << "Unknown Command received, exiting with failure\n";
-                  exit(1);
-          }
-      });
+                      // Write payload
+                      if (auto [sent, error_msg] =
+                            video_sink.WritePacket(inbuf.data(), inbuf_size);
+                          sent < 0) {
+                          cout << "Error in writing payload to Camera VHal: "
+                               << error_msg << "\n";
+                          exit(1);
+                      }
+                      cout << "[rate=30fps] Sent " << istrm.gcount()
+                           << " bytes to Camera VHal.\n";
+                  });
+                break;
+            case VideoSink::Command::kClose:
+                cout << "Received Close command from Camera VHal\n";
+                camera_backend(nullptr);
+                exit(0);
+            default:
+                cout << "Unknown Command received, exiting with failure\n";
+                exit(1);
+        }
+    });
 
     // we need to be alive :)
     while (true) {
