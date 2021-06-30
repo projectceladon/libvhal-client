@@ -5,12 +5,14 @@ include_directories (
 )
 list (APPEND SOURCES unix_stream_socket_client.cc)
 list (APPEND SOURCES video_sink.cc)
+list (APPEND SOURCES sensor_interface.cc)
 
 # Build libvhal-client
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 target_link_libraries( ${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} )
 
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX})
 # Make sure the compiler can find include files for vhal-client library
 # when other libraries or executables link to vhal-client
 target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

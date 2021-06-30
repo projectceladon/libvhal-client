@@ -51,6 +51,14 @@ Scanning dependencies of target camera_client
 [100%] Linking CXX executable ../../bins/linux/camera_client
 [100%] Built target camera_client
 ```
+```
+### To install/copy libvhal-clinet.so in to particular directory
+libvhal-client$mkdir build
+libvhal-client$cd build
+libvhal-client$cmake .. -DCMAKE_INSTALL_PREFIX=<Install folder name>
+libvhal-client$make
+libvhal-client$make install
+```
 
 ## Camera
 
@@ -81,4 +89,40 @@ Register with `vhal::client::VideoSink` for Camera open/close callbacks as below
 TODO
 
 ## Sensor
-TODO
+Sensor VHAL runs socket server for UNIX and INET domains. VHAL Client library(libvhal-client.so) shall connect to socket server path.
+
+### Architecture
+Here shown the E2E block diagram of sensors and API sequence to communicate with libVHAL Client
+
+![image](docs/sensor-e2e-block-diagram.JPG)
+
+![image](docs/sensor-api-sequence-flow.JPG)
+
+### Steps to interact with libVHAL-Client from Streamer
+
+1. Create an object to libVHAL's SensorInterface class and pass client's instance ID.
+Then libVHAL will prepare and connect to Sensor server using UNIX domain sockets.
+```cpp
+sensorHALIface = make_unique<SensorInterface>(mInstanceId);
+```
+
+2. Register a callback func to get sensor conf packets upon received from Sensor VHAL server. ConfPacket contains respective sensor's enable/disable info and sampling period.
+```cpp
+    sensorHALIface->RegisterCallback([&](const SensorInterface::ConfPacket& confPkt){});
+```
+
+3. Use below api to know list of sensors supported by libVHAL-client or AIC. This API returns supported sensor list in bitmap format.
+```cpp
+uint64_t GetSupportedSensorList();
+```
+
+4. Fill the available sensor data into structure sensorDataPacket. Send the data to libVHAL-client like below
+```cpp
+sensorHALIface->SendDataPacket(&event);
+```
+
+Example implementation to interact with libVHAL-client is present in examples/sensor_client.cc
+
+
+
+
