@@ -1,6 +1,6 @@
 # VHAL Client library 
 
-libvhal-client is a library written in C++17 for Camera, Audio and Sensor modules. Currently only Camera is
+libvhal-client is a library written in C++17 for Touch, Joystick, Camera, Audio and Sensor modules. Currently only Camera is
 supported. Using this library, a client can interact with Camera Vhal without worrying about socket connection,
 data structure, command details. Instead, the library exposes simple and powerful API that simplifies the life of
 VHAL client modules such as CG-Proxy, Streamer, etc. Any internal changes in the Camera VHAL and the library
@@ -65,7 +65,40 @@ cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/..
 libvhal-client$make
 libvhal-client$make install
 ```
+## Touch & Joystick
+input-pipe\<x\>-\<y\> are used for touch and joystick. The touch supports fingers number from 1 to 10. The finger id should start from 0 in every session. Sample code is here:
+```
+examples/VirtualInputReceiverSample.cpp
+```
 
+### Input Sequence diagram & Pipe data structure Protocol
+![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/virtual_touch_and_input_sequence.jpg)
+
+![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/virtual_touch_and_input_api.jpg)
+
+### Touch Coordinate conversion
+1. On a normal mobile phone tablet, the touch size corresponds to the screen size one by one. For example, the screen is X * Y = 1024 * 600, and the touch size is also x * y = 1024 * 600.
+2. When initially implementing Remote Input, the screen size X * Y = 720 * 1280 required at the time. We selected the touch size x * y = 720 * 1280. One feature that was planned to be done at that time was to dynamically set the screen size according to the surfaceFlinger display.
+3. Touch size may not be consistent with display size Just do the appropriate mapping. The accuracy has changed slightly. For example, Touch is currently x * y = 720 * 1280. The display size is X * Y = 1024 * 600. Given Client X 'and Y', the touch input should be x '= X' * (720-1) / (1024-1). y '= Y' * (1280 -1) / (600-1). 720-1 and 1024-1 are because the maximum value of the abscissa is 719 and 1023. The ordinate is similar.
+4. Because the size of the client is variable, the latest solution does not use the dynamic setting of the screen size of the surfaceFlinger display. But in order to preserve the accuracy as much as possible, set the Touch x * y = 32768 * 32768 (starting from 0, signed 16-bit integer maximum + 1). The latest calculation method is: Given Client X 'and Y', then What should be input to touch is x '= X' * (32768-1) / (1024-1). Y '= Y' * (32768 -1) / (600-1).
+5. The screen size X * Y can be converted into a float value including 0 to 1. For example, the screen size X * Y = 720 * 1280, given Client X 'and Y', the conversion formula to [0, 1] is: x01 = X '/ (720 -1), y01 = Y' / (1280 -1). Given x01 'and y01', according to the latest version, what should be input to touch is x '= x01' * (32768-1). Y '= y01' * (32768 -1).
+6. Please confirm the version you are using (Touch is x * y = 720 * 1280, or Touch is x * y = 32768 * 32768), screen size, and convert the corresponding value.
+
+### Multiple joysticks
+AIC could support multiple joysticks and accept a unified scan code depending on Generic.kl. For controller devices with different types or designed by different vendors, their scan code may be different, so customer needs to map the controller device's scan code to the AIC unified scan code when inject joystick's scan code.
+
+Profile for a generic game controller
+![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/Profile_for_a_generic_game_controller.png)
+
+EV_KEY events scan code map
+![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/EV_KEY_events_scan_code_map.png)
+
+EV_ABS events axis code value map
+![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/EV_ABS_events_axis_code_value_map.png)
+
+If customer would develop your own client app in Android OS, the Android framework provides APIs for detecting and processing user input from game controllers, you could use these APIs to get the Android keycode. Though different joystick vendors' device may have different scan code, Android OS has masked the difference and you could get a unified Android keycode from the Android API. Then the Android keycode could be used to do the map work for joystick. Client app can inspect the key code by calling getKeyCode() or from key event callbacks such as onKeyDown().
+
+![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/code_snippet.png)
 ## Camera
 
 Camera VHal runs socket server (UNIX, VSock are supported). VHAL Client library shall connect to socket server path or address/port endpoint.
