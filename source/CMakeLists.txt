@@ -11,6 +11,7 @@ list (APPEND SOURCES vsock_stream_socket_client.cc)
 list (APPEND SOURCES audio_sink.cc)
 list (APPEND SOURCES audio_source.cc)
 list (APPEND SOURCES VirtualInputReceiver.cpp)
+list (APPEND SOURCES VirtualGpsReceiver.cpp)
 
 # Build libvhal-client
 add_library(${PROJECT_NAME} SHARED ${SOURCES})

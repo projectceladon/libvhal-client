@@ -5,7 +5,7 @@
 #include <string>
 
 using namespace std;
-int debug = 0x1;
+int debug = 0x3;
 void
 TestButton1(VirtualInputReceiver* vir)
 {

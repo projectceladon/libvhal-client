@@ -1,6 +1,6 @@
 # VHAL Client library 
 
-libvhal-client is a library written in C++17 for Touch, Joystick, Camera, Audio and Sensor modules. Currently only Camera is
+libvhal-client is a library written in C++17 for Touch, Joystick, GPS, Camera, Audio and Sensor modules. Currently only Camera is
 supported. Using this library, a client can interact with Camera Vhal without worrying about socket connection,
 data structure, command details. Instead, the library exposes simple and powerful API that simplifies the life of
 VHAL client modules such as CG-Proxy, Streamer, etc. Any internal changes in the Camera VHAL and the library
@@ -70,11 +70,10 @@ input-pipe\<x\>-\<y\> are used for touch and joystick. The touch supports finger
 ```
 examples/VirtualInputReceiverSample.cpp
 ```
-
 ### Input Sequence diagram & Pipe data structure Protocol
-![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/virtual_touch_and_input_sequence.jpg)
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/virtual_touch_and_input_sequence.jpg)
 
-![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/virtual_touch_and_input_api.jpg)
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/virtual_touch_and_input_api.jpg)
 
 ### Touch Coordinate conversion
 1. On a normal mobile phone tablet, the touch size corresponds to the screen size one by one. For example, the screen is X * Y = 1024 * 600, and the touch size is also x * y = 1024 * 600.
@@ -88,17 +87,32 @@ examples/VirtualInputReceiverSample.cpp
 AIC could support multiple joysticks and accept a unified scan code depending on Generic.kl. For controller devices with different types or designed by different vendors, their scan code may be different, so customer needs to map the controller device's scan code to the AIC unified scan code when inject joystick's scan code.
 
 Profile for a generic game controller
-![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/Profile_for_a_generic_game_controller.png)
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/Profile_for_a_generic_game_controller.png)
 
 EV_KEY events scan code map
-![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/EV_KEY_events_scan_code_map.png)
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/EV_KEY_events_scan_code_map.png)
 
 EV_ABS events axis code value map
-![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/EV_ABS_events_axis_code_value_map.png)
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/EV_ABS_events_axis_code_value_map.png)
 
 If customer would develop your own client app in Android OS, the Android framework provides APIs for detecting and processing user input from game controllers, you could use these APIs to get the Android keycode. Though different joystick vendors' device may have different scan code, Android OS has masked the difference and you could get a unified Android keycode from the Android API. Then the Android keycode could be used to do the map work for joystick. Client app can inspect the key code by calling getKeyCode() or from key event callbacks such as onKeyDown().
 
-![image](https://github.com/bing8deng/libvhal-client/blob/ref/heads/virtual-touch-and-joystick/docs/code_snippet.png)
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/code_snippet.png)
+
+## GPS
+Socket is used for GPS. Sample code is here:
+```
+examples/VirtualGpsReceiverSample.cpp
+```
+### GPS Sequence diagram & Socket data structure Protocol
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/virtual_gps_sequence_diagram.png)
+
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/virtual_gps_socket_data_structure_protocol.jpg)
+
+### GPS - NMEA sentence information
+Currently, it only supports Global Positioning System Fix Data(GPGGA).
+
+Reference: http://aprs.gids.nl/nmea/#gga
 ## Camera
 
 Camera VHal runs socket server (UNIX, VSock are supported). VHAL Client library shall connect to socket server path or address/port endpoint.

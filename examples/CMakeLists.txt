@@ -47,6 +47,9 @@ target_link_libraries (audio_playback_client LINK_PUBLIC ${PROJECT_NAME})
 add_executable (VirtualInputReceiverSample VirtualInputReceiverSample.cpp)
 target_link_libraries (VirtualInputReceiverSample LINK_PUBLIC ${PROJECT_NAME})
 
+add_executable (VirtualGpsReceiverSample VirtualGpsReceiverSample.cpp)
+target_link_libraries (VirtualGpsReceiverSample LINK_PUBLIC ${PROJECT_NAME})
+
 install(TARGETS camera_socket_client
                 camera_client
                 sensor_client
