@@ -21,17 +21,35 @@
  */
 #include "video_sink.h"
 #include "video_sink_impl.h"
+#include "unix_stream_socket_client.h"
 #include <functional>
 #include <memory>
 #include <string>
+#include <cstring>
 #include <sys/types.h>
+
+#define CAMERA_UNIX_SOCKET "/camera-socket"
 
 namespace vhal {
 namespace client {
 
-VideoSink::VideoSink(std::unique_ptr<IStreamSocketClient> socket)
-  : impl_{ std::make_unique<Impl>(std::move(socket)) }
-{}
+VideoSink::VideoSink(UnixConnectionInfo unix_conn_info)
+{
+    auto sockPath = unix_conn_info.socket_dir;
+    if (sockPath.length() == 0) {
+        throw std::invalid_argument("Please set a valid socket_dir");
+    } else {
+        sockPath += CAMERA_UNIX_SOCKET;
+        if (unix_conn_info.android_instance_id >= 0) {
+            sockPath += std::to_string(unix_conn_info.android_instance_id);
+        }
+    }
+
+    //Creating interface to communicate to VHAL via libvhal
+    auto unix_sock_client =
+      std::make_unique<UnixStreamSocketClient>(std::move(sockPath));
+    impl_ = std::make_unique<Impl>(std::move(unix_sock_client));
+}
 
 VideoSink::~VideoSink() {}
 
@@ -41,10 +59,9 @@ VideoSink::RegisterCallback(CameraCallback callback)
     return impl_->RegisterCallback(callback);
 }
 
-IOResult
-VideoSink::WritePacket(const uint8_t* packet, size_t size)
+IOResult VideoSink::SendDataPacket(const uint8_t* packet, size_t size)
 {
-    return impl_->WritePacket(packet, size);
+    return impl_->SendDataPacket(packet, size);
 }
 
 }; // namespace client

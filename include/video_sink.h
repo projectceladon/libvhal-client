@@ -22,6 +22,7 @@
  *
  */
 #include "istream_socket_client.h"
+#include "libvhal_common.h"
 #include <functional>
 #include <memory>
 #include <string>
@@ -111,14 +112,13 @@ public:
     using CameraCallback = std::function<void(const CtrlMessage& ctrl_msg)>;
 
     /**
-     * @brief Construct a new VideoSink object
+     * @brief Construct a default VideoSink object from the Android instance id.
+     *        Throws std::invalid_argument excpetion.
      *
-     * @param socket_client Stream socket that handles VHAL transaction.
-     * Currently only Stream socket types are supported.
-     * @param callback Callback that is triggered by VHAL for OpenCamera and
-     * CloseCamera cases.
+     * @param unix_conn_info Information needed to connect to the unix vhal socket.
+     *
      */
-    VideoSink(std::unique_ptr<IStreamSocketClient> socket_client);
+    VideoSink(UnixConnectionInfo unix_conn_info);
 
     /**
      * @brief Destroy the VideoSink object
@@ -138,14 +138,17 @@ public:
     bool RegisterCallback(CameraCallback callback);
 
     /**
-     * @brief Write an encoded Camera packet to VHAL.
+     * @brief Send an encoded Camera packet to VHAL.
      *
      * @param packet Encoded Camera packet.
      * @param size Size of the Camera packet.
      *
      * @return ssize_t No of bytes written to VHAL, -1 if failure.
+     * @return IOResult tuple<ssize_t, std::string>.
+     *         ssize_t No of bytes sent and -1 incase of failure
+     *         string is the status message.
      */
-    IOResult WritePacket(const uint8_t* packet, size_t size);
+    IOResult SendDataPacket(const uint8_t* packet, size_t size);
 
 private:
     class Impl;

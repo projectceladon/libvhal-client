@@ -67,23 +67,30 @@ Camera VHal runs socket server (UNIX, VSock are supported). VHAL Client library 
 ### Architecture
 ![image](https://github.com/intel-sandbox/libvhal-client/assets/26615772/66a89e80-d316-11eb-814f-c4e75902441c)
 
+### Steps to interact with libVHAL-Client from Streamer
 
-### Camera API to interact with VHal
-Camera VHal client might do following steps.
-
-Create a socket client (say, UNIX):
+1. Create an object to libVHAL's `vhal::client::VideoSink` by passing `vhal::client::UnixConnectionInfo`.
+Then libVHAL will prepare and connect to Camera server using UNIX domain sockets.
 ```cpp
-auto unix_sock_client = make_unique<vhal::client::UnixStreamSocketClient>(move(socket_path));
+    UnixConnectionInfo conn_info = { socket_path, instance_id };
+    try {
+        video_sink = make_shared<VideoSink>(conn_info);
+    }
 ```
 
-Handover socket client to `vhal::client::VideoSink` that talks to Camera VHal.
+2. Register a callback with `vhal::client::VideoSink` for Camera open/close commands.
 ```cpp
-vhal::client::VideoSink video_sink(move(unix_sock_client));
+video_sink->RegisterCallback([&](const VideoSink::CtrlMessage& ctrl_msg) {
+// Callback Implementation here
+}
 ```
 
-Register with `vhal::client::VideoSink` for Camera open/close callbacks as below:
+3. Send the camera frames to libVHAL-client as below.
+```cpp
+video_sink->SendDataPacket(inbuf.data(), inbuf_size);
+```
 
-![image](https://github.com/intel-sandbox/libvhal-client/assets/26615772/2269ce00-d317-11eb-89fe-94e28ae73eb1)
+Example implementation to interact with libVHAL-client is present in examples/camera_client.cc
 
 ## Audio
 TODO

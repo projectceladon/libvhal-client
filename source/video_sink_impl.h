@@ -118,13 +118,23 @@ public:
         return true;
     }
 
-    // atomic<bool> ShouldContinue() const { return should_continue_; }
-
-    IOResult WritePacket(const uint8_t* packet, size_t size)
+    IOResult SendDataPacket(const uint8_t* packet, size_t size)
     {
+        std::string result_error_msg = "";
+        // Write payload size
+        if (auto [sent, error_msg] = socket_client_->Send((uint8_t*)&size, sizeof(size));
+            sent == -1) {
+                error_msg = "Error in writing payload size to Camera VHal: "
+                  + error_msg;
+                return { sent, error_msg };
+            }
+        // Write payload
         if (auto [sent, error_msg] = socket_client_->Send(packet, size);
-            sent == -1)
-            return { sent, error_msg };
+            sent == -1) {
+                error_msg = "Error in writing payload to Camera VHal: "
+                  + error_msg;
+                return { sent, error_msg };
+            }
         // success
         return { size, "" };
     }

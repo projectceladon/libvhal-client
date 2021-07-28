@@ -20,7 +20,6 @@
  *
  */
 
-#include "unix_stream_socket_client.h"
 #include "video_sink.h"
 #include <array>
 #include <atomic>
@@ -39,11 +38,10 @@ static void
 usage(string program_name)
 {
     cout << "\tUsage:   " << program_name
-         << " <filename> <vhal-sock-path>\n"
+         << " <filename> <socket-dir>\n"
             "\tExample: "
          << program_name
-         << " test.h265 /ipc/camdec-sock-0"
-            "frames\n";
+         << " test.h265 /opt/workdir/ipc/\n";
     return;
 }
 
@@ -55,19 +53,25 @@ main(int argc, char** argv)
         exit(1);
     }
 
-    string       socket_path(argv[2]);
-    string       filename = argv[1];
-    atomic<bool> stop     = false;
-    thread       file_src_thread;
+    string                  socket_path(argv[2]);
+    string                  filename = argv[1];
+    int                     instance_id = 0;
+    atomic<bool>            stop     = false;
+    thread                  file_src_thread;
+    shared_ptr<VideoSink>   video_sink;
 
-    auto unix_sock_client =
-      make_unique<UnixStreamSocketClient>(move(socket_path));
-
-    VideoSink video_sink(move(unix_sock_client));
+    UnixConnectionInfo conn_info = { socket_path, instance_id };
+    try {
+        video_sink = make_shared<VideoSink>(conn_info);
+    } catch (const std::exception& ex) {
+        cout << "VideoSink creation error :"
+             << ex.what() << endl;
+        exit(1);
+    }
 
     cout << "Waiting Camera Open callback..\n";
 
-    video_sink.RegisterCallback([&](const VideoSink::CtrlMessage& ctrl_msg) {
+    video_sink->RegisterCallback([&](const VideoSink::CtrlMessage& ctrl_msg) {
         switch (ctrl_msg.cmd) {
             case VideoSink::Command::kOpen: {
                 cout << "Received Open command from Camera VHal\n";
@@ -84,7 +88,7 @@ main(int argc, char** argv)
                 // resolution.
 
                 // Start thread that is going to push video input
-                file_src_thread = thread([&stop, &video_sink, &filename]() {
+                file_src_thread = thread([&stop, video_sink, &filename]() {
                     // open file for reading
                     fstream istrm(filename, istrm.binary | istrm.in);
                     if (!istrm.is_open()) {
@@ -114,20 +118,9 @@ main(int argc, char** argv)
                             continue;
                         }
 
-                        // Write payload size
+                        // Send payload
                         if (auto [sent, error_msg] =
-                              video_sink.WritePacket((uint8_t*)&inbuf_size,
-                                                     sizeof(inbuf_size));
-                            sent < 0) {
-                            cout << "Error in writing payload size to "
-                                    "Camera VHal: "
-                                 << error_msg << "\n";
-                            exit(1);
-                        }
-
-                        // Write payload
-                        if (auto [sent, error_msg] =
-                              video_sink.WritePacket(inbuf.data(), inbuf_size);
+                              video_sink->SendDataPacket(inbuf.data(), inbuf_size);
                             sent < 0) {
                             cout << "Error in writing payload to Camera VHal: "
                                  << error_msg << "\n";
