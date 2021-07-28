@@ -86,13 +86,13 @@ public:
                     if (fds[0].revents & POLLIN) {
                         cout << "Sensor VHal has some message for us!\n";
 
-                        SensorInterface::ConfPacket ctrl_msg;
+                        SensorInterface::CtrlPacket ctrl_msg;
 
                         if (auto [received, recv_err_msg] =
                               socket_client_->Recv(
                                 reinterpret_cast<uint8_t*>(&ctrl_msg),
                                 sizeof(ctrl_msg));
-                            received != sizeof(SensorInterface::ConfPacket)) {
+                            received != sizeof(SensorInterface::CtrlPacket)) {
                             cout << "Failed to read message from SensorInterface: "
                                  << recv_err_msg
                                  << ", going to disconnect and reconnect.\n";
@@ -101,7 +101,7 @@ public:
                             // FIXME: What to do ?? Exit ?
                         }
 
-                        if (IsValidConfPacket(ctrl_msg.type)) {
+                        if (IsValidCtrlPacket(ctrl_msg.type)) {
                             // success, invoke client callback
                             callback_(cref(ctrl_msg));
                         }
@@ -123,9 +123,9 @@ public:
         return true;
     }
 
-    SensorInterface::IOResult SendDataPacket(const SensorDataPacket *event)
+    IOResult SendDataPacket(const SensorDataPacket *event)
     {
-        vhal_sensor_event_t *sensor_event = nullptr;
+        vhal_sensor_event_t sensor_event;
         int dataCount = 0;
 
         if (not socket_client_->Connected())
@@ -156,30 +156,29 @@ public:
                 return {-1, "Sensor Type not supported"};
         }
 
-        if (!sensor_event)
-            sensor_event = (vhal_sensor_event_t *)
-                new char[sizeof(vhal_sensor_event_t) + sizeof(float) * 8];
-
-        int32_t totalPayloadLen = sizeof(vhal_sensor_event_t) +
-                                        dataCount * sizeof(float);
-        sensor_event->type = event->type;
-        sensor_event->dataNum = dataCount;
-        sensor_event->timestamp = event->timestamp;
+        int32_t totalPayloadLen = sizeof(vhal_sensor_event_t) -
+                                sizeof(sensor_event.fdata) +
+                                (dataCount * sizeof(float));
+        sensor_event.fdata = new float [dataCount];
+        sensor_event.type = event->type;
+        sensor_event.fdataCount = dataCount;
+        sensor_event.timestamp_ns = event->timestamp_ns;
         for (int i = 0; i < dataCount; i++)
-             sensor_event->data.fdata[i] = event->fdata[i];
+            sensor_event.fdata[i] = event->fdata[i];
 
-        if (auto [sent, error_msg] =
-                socket_client_->Send(reinterpret_cast<uint8_t*>(sensor_event),
+	if (auto [sent, error_msg] =
+                socket_client_->Send(reinterpret_cast<uint8_t*>(&sensor_event),
                 totalPayloadLen); sent == -1) {
-            delete sensor_event;
+            delete sensor_event.fdata;
             return { sent, error_msg };
         }
+
+        delete sensor_event.fdata;
         // success
-        delete sensor_event;
         return { totalPayloadLen, "" };
     }
 
-    bool IsValidConfPacket(int32_t SensorType)
+    bool IsValidCtrlPacket(int32_t SensorType)
     {
         //configure sensor packet
         switch (SensorType) {
@@ -199,15 +198,15 @@ public:
     }
 
     uint64_t GetSupportedSensorList() {
-        return  (1ULL << (SENSOR_TYPE_ACCELEROMETER -1))  |
-                (1ULL << (SENSOR_TYPE_MAGNETIC_FIELD -1)) |
-                (1ULL << (SENSOR_TYPE_GYROSCOPE -1)) |
-                (1ULL << (SENSOR_TYPE_AMBIENT_TEMPERATURE -1)) |
-                (1ULL << (SENSOR_TYPE_PROXIMITY -1)) |
-                (1ULL << (SENSOR_TYPE_LIGHT -1)) |
-                (1ULL << (SENSOR_TYPE_ACCELEROMETER_UNCALIBRATED -1)) |
-                (1ULL << (SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED -1)) |
-                (1ULL << (SENSOR_TYPE_GYROSCOPE_UNCALIBRATED -1));
+        return  SENSOR_TYPE_MASK(SENSOR_TYPE_ACCELEROMETER)  |
+                SENSOR_TYPE_MASK(SENSOR_TYPE_MAGNETIC_FIELD) |
+                SENSOR_TYPE_MASK(SENSOR_TYPE_GYROSCOPE) |
+                SENSOR_TYPE_MASK(SENSOR_TYPE_AMBIENT_TEMPERATURE) |
+                SENSOR_TYPE_MASK(SENSOR_TYPE_PROXIMITY) |
+                SENSOR_TYPE_MASK(SENSOR_TYPE_LIGHT) |
+                SENSOR_TYPE_MASK(SENSOR_TYPE_ACCELEROMETER_UNCALIBRATED) |
+                SENSOR_TYPE_MASK(SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED) |
+                SENSOR_TYPE_MASK(SENSOR_TYPE_GYROSCOPE_UNCALIBRATED);
     }
 private:
     SensorCallback                  callback_ = nullptr;

@@ -32,7 +32,7 @@ UnixStreamSocketClient::UnixStreamSocketClient(
 
 UnixStreamSocketClient::~UnixStreamSocketClient() = default;
 
-IStreamSocketClient::ConnectionResult
+ConnectionResult
 UnixStreamSocketClient::Connect()
 {
     return impl_->Connect();
@@ -50,13 +50,13 @@ UnixStreamSocketClient::GetNativeSocketFd() const
     return impl_->GetNativeSocketFd();
 }
 
-IStreamSocketClient::IOResult
+IOResult
 UnixStreamSocketClient::Send(const uint8_t* data, size_t size)
 {
     return impl_->Send(data, size);
 }
 
-IStreamSocketClient::IOResult
+IOResult
 UnixStreamSocketClient::Recv(uint8_t* data, size_t size)
 {
     return impl_->Recv(data, size);

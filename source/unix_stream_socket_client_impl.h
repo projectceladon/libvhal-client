@@ -53,7 +53,7 @@ public:
     }
     ~Impl() { Close(); }
 
-    IStreamSocketClient::ConnectionResult Connect()
+    ConnectionResult Connect()
     {
         std::string error_msg = "";
         auto        len = strlen(remote_.sun_path) + sizeof(remote_.sun_family);
@@ -71,7 +71,7 @@ public:
 
     int GetNativeSocketFd() const { return fd_; }
 
-    IStreamSocketClient::IOResult Send(const uint8_t* data, size_t size)
+    IOResult Send(const uint8_t* data, size_t size)
     {
         std::string error_msg = "";
 
@@ -84,7 +84,7 @@ public:
         return { sent, error_msg };
     }
 
-    IStreamSocketClient::IOResult Recv(uint8_t* data, size_t size)
+    IOResult Recv(uint8_t* data, size_t size)
     {
         std::string error_msg = "";
 

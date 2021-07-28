@@ -106,9 +106,9 @@ Then libVHAL will prepare and connect to Sensor server using UNIX domain sockets
 sensorHALIface = make_unique<SensorInterface>(mInstanceId);
 ```
 
-2. Register a callback func to get sensor conf packets upon received from Sensor VHAL server. ConfPacket contains respective sensor's enable/disable info and sampling period.
+2. Register a callback func to get sensor control packets upon received from Sensor VHAL server. CtrlPacket contains respective sensor's enable/disable info and sampling period.
 ```cpp
-    sensorHALIface->RegisterCallback([&](const SensorInterface::ConfPacket& confPkt){});
+    sensorHALIface->RegisterCallback([&](const SensorInterface::CtrlPacket& ctrlPkt){});
 ```
 
 3. Use below api to know list of sensors supported by libVHAL-client or AIC. This API returns supported sensor list in bitmap format.

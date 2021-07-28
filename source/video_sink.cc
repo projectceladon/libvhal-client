@@ -41,7 +41,7 @@ VideoSink::RegisterCallback(CameraCallback callback)
     return impl_->RegisterCallback(callback);
 }
 
-VideoSink::IOResult
+IOResult
 VideoSink::WritePacket(const uint8_t* packet, size_t size)
 {
     return impl_->WritePacket(packet, size);

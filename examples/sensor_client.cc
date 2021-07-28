@@ -45,16 +45,16 @@ int main(int argc, char** argv)
 {
     int instanceId = 0;
     std::unique_ptr<SensorInterface> sensorHALIface;
-    SensorInterface::SensorDataPacket event = {0};
+    SensorInterface::SensorDataPacket event;
 
     /* Create sensor Interface with LibVHAL */
     sensorHALIface = make_unique<SensorInterface>(instanceId);
 
     /* Register a callback to receive VHAL sensor config packets */
     sensorHALIface->RegisterCallback([&]
-            (const SensorInterface::ConfPacket& confPkt) {
+            (const SensorInterface::CtrlPacket& ctrlPkt) {
         std::unique_lock<std::mutex> lck(sensorMapMutex);
-        mSensorMap.insert({confPkt.type, confPkt.enabled});
+        mSensorMap.insert({ctrlPkt.type, ctrlPkt.enabled});
     });
 
     /* Start a thread to send dummy sensor data for ACCELEROMETER sensor*/
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
                         event.fdata[3] = 3;
                         struct timespec ts;
                         clock_gettime(CLOCK_BOOTTIME, &ts);
-                        event.timestamp = (int64_t)ts.tv_sec * 1000000000 + ts.tv_nsec;
+                        event.timestamp_ns = (int64_t)ts.tv_sec * 1000000000 + ts.tv_nsec;
                         sensorHALIface->SendDataPacket(&event);
                     }
                 }

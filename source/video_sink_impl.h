@@ -120,7 +120,7 @@ public:
 
     // atomic<bool> ShouldContinue() const { return should_continue_; }
 
-    VideoSink::IOResult WritePacket(const uint8_t* packet, size_t size)
+    IOResult WritePacket(const uint8_t* packet, size_t size)
     {
         if (auto [sent, error_msg] = socket_client_->Send(packet, size);
             sent == -1)

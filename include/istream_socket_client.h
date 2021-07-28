@@ -34,6 +34,25 @@ namespace vhal {
 namespace client {
 
 /**
+ * Below are the return types used by derived class member functions.
+ */
+
+/**
+ * @brief IOResult
+ *          { >=0, "" } on Success
+ *          see function description for ssize_t value interpretation.
+ *          {errno, "error msg"} on Failure
+ */
+using IOResult = std::tuple<ssize_t, std::string>;
+
+/**
+ * @brief ConnectionResult
+ *          { True, "" } on Success
+ *          { False, "error msg"} on Failure
+ */
+using ConnectionResult = std::tuple<bool, std::string>;
+
+/**
  * @brief Interface for Stream oriented (connection-oriented) sockets, which
  * covers TCP, Unix domain, vSock sockets. Stream socket clients have notion of
  * connect, send, recv, close idiom. In specialized cases such as TCP and Unix,
@@ -45,9 +64,6 @@ namespace client {
 class IStreamSocketClient
 {
 public:
-    using ConnectionResult = std::tuple<bool, std::string>;
-    using IOResult         = std::tuple<ssize_t, std::string>;
-
     /**
      * @brief Destroy the IStreamSocket object
      *
@@ -64,7 +80,7 @@ public:
     virtual ConnectionResult Connect() = 0;
 
     /**
-     * @brief
+     * @brief Get socket connection status
      *
      * @return true
      * @return false
@@ -79,28 +95,29 @@ public:
     virtual int GetNativeSocketFd() const = 0;
 
     /**
-     * @brief
+     * @brief Send raw data to server
      *
      * @param data
      * @param size
-     * @return size_t
+     * @return IOResult
+     *         <Number of bytes sent, Empty string> on Success
+     *         <Error number, Error message on Failure> on Failure
      */
     virtual IOResult Send(const uint8_t* data, size_t size) = 0;
 
     /**
      * @brief
      *
-     * @param data
+     * @param data Recevie raw data from server
      * @param size
-     * @return size_t
+     * @return IOResult
+     *         <Number of bytes received, Empty string> on Success
+     *         <Error number, Error message on Failure> on Failure
      */
     virtual IOResult Recv(uint8_t* data, size_t size) = 0;
 
     /**
-     * @brief
-     *
-     * @return true
-     * @return false
+     * @brief Closes socket connection.
      */
     virtual void Close() = 0;
 };

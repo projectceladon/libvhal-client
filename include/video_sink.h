@@ -39,7 +39,6 @@ namespace client {
 class VideoSink
 {
 public:
-    using IOResult = std::tuple<ssize_t, std::string>;
     /**
      * @brief
      *

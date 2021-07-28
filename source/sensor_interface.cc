@@ -51,14 +51,12 @@ SensorInterface::SensorInterface(int InstanceId)
 
 SensorInterface::~SensorInterface() {}
 
-bool
-SensorInterface::RegisterCallback(SensorCallback callback)
+bool SensorInterface::RegisterCallback(SensorCallback callback)
 {
     return impl_->RegisterCallback(callback);
 }
 
-SensorInterface::IOResult
-SensorInterface::SendDataPacket(const SensorDataPacket *event)
+IOResult SensorInterface::SendDataPacket(const SensorDataPacket *event)
 {
     return impl_->SendDataPacket(event);
 }
