@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.0)
 project (vhal-client VERSION 1.0 DESCRIPTION "VHAL Client library written in C++17 for Audio, Camera and Sensor" LANGUAGES CXX)
 
+option(BUILD_EXAMPLES "Build examples?" ON)
+
 message(STATUS "Project name: ${PROJECT_NAME}")
 
 set (TARGET_OS "linux")
@@ -25,5 +27,7 @@ set (LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/${TARGET_OS}")
 link_directories ("${LIBRARY_OUTPUT_PATH}")
 
 add_subdirectory (source)
-add_subdirectory (examples)
+if (BUILD_EXAMPLES)
+  add_subdirectory (examples)
+endif()
 # TODO: Add tests
