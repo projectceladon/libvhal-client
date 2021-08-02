@@ -1,6 +1,6 @@
 
-#include "VirtualGpsReceiver.h"
-#include "ReceiverLog.h"
+#include "virtual_gps_receiver.h"
+#include "receiver_log.h"
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netinet/in.h>
@@ -39,49 +39,51 @@ VirtualGpsReceiver::~VirtualGpsReceiver()
     mWorkThread->join();
 }
 
-bool
+ConnectionResult
 VirtualGpsReceiver::Connect()
 {
+    std::string error_msg = "";
     AIC_LOG(DEBUG, "GPS connect VHAL server...");
     if (mSockGps >= 0) {
         Disconnect();
     }
 
-    char kSockWithId[30];
-    sprintf(kSockWithId, "%s", mIp.c_str());
-    AIC_LOG(DEBUG, "GPS server_ip = %s, port = %d", kSockWithId, mPort);
+    AIC_LOG(DEBUG, "GPS server_ip = %s, port = %d", mIp.c_str(), mPort);
     mSockGps = socket(AF_INET, SOCK_STREAM, 0);
     if (mSockGps < 0) {
         AIC_LOG(ERROR, "Can't create GPS socket");
-        return false;
+        error_msg = std::strerror(errno);
+        return { false, error_msg };
     }
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(struct sockaddr_in));
     addr.sin_family = AF_INET;
     addr.sin_port   = htons(mPort);
-    inet_pton(AF_INET, kSockWithId, &addr.sin_addr);
+    inet_pton(AF_INET, mIp.c_str(), &addr.sin_addr);
 
     int res =
       connect(mSockGps, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
     if (res < 0) {
         AIC_LOG(ERROR, "Can't connect to GPS remote, %s", strerror(errno));
+        error_msg = std::strerror(errno);
         close(mSockGps);
         mSockGps = -1;
-        return false;
+        return { false, error_msg };
     }
-    return true;
+    return { true, error_msg };
 }
 
-bool
+ConnectionResult
 VirtualGpsReceiver::Disconnect()
 {
+    std::string error_msg = "";
     if (mSockGps < 0) {
         AIC_LOG(DEBUG,
                 "GPS socket is already disconnect. mSockGps = %d mStop = %s",
                 mSockGps,
                 mStop ? "true" : "false");
-        return true;
+        return { true, error_msg };
     }
 
     AIC_LOG(DEBUG,
@@ -91,7 +93,7 @@ VirtualGpsReceiver::Disconnect()
     shutdown(mSockGps, SHUT_RDWR);
     close(mSockGps);
     mSockGps = -1;
-    return true;
+    return { true, error_msg };
 }
 
 bool
@@ -100,13 +102,14 @@ VirtualGpsReceiver::Connected()
     return mSockGps > 0;
 }
 
-ssize_t
+IOResult
 VirtualGpsReceiver::Write(const char* buf, size_t len)
 {
-    size_t       offset  = 0;
-    size_t       left    = len;
-    ssize_t      size    = 0;
-    unsigned int attempt = 100;
+    size_t       offset    = 0;
+    size_t       left      = len;
+    ssize_t      size      = 0;
+    unsigned int attempt   = 100;
+    std::string  error_msg = "";
 
     while (left > 0) {
         do {
@@ -114,26 +117,29 @@ VirtualGpsReceiver::Write(const char* buf, size_t len)
         } while (size < 0 && errno == EINTR && (--attempt > 0));
         if (size == 0) {
             AIC_LOG(ERROR, "GPS socket server is closed.");
+            error_msg = std::strerror(errno);
             Disconnect();
-            return -1;
+            return { size, error_msg };
         } else if (size < 0) {
             AIC_LOG(ERROR, "GPS socket write error: %s", strerror(errno));
-            return size;
+            error_msg = std::strerror(errno);
+            return { size, error_msg };
         } else {
             left -= size;
             offset += size;
         }
     }
-    return offset > 0 ? offset : size;
+    return { offset > 0 ? offset : size, error_msg };
 }
 
-ssize_t
+IOResult
 VirtualGpsReceiver::Read(uint8_t* buf, size_t len)
 {
-    size_t       offset  = 0;
-    size_t       left    = len;
-    ssize_t      size    = 0;
-    unsigned int attempt = 100;
+    size_t       offset    = 0;
+    size_t       left      = len;
+    ssize_t      size      = 0;
+    unsigned int attempt   = 100;
+    std::string  error_msg = "";
 
     while (left > 0) {
         do {
@@ -141,17 +147,20 @@ VirtualGpsReceiver::Read(uint8_t* buf, size_t len)
         } while (size < 0 && errno == EINTR && (--attempt > 0));
         if (size == 0) {
             AIC_LOG(ERROR, "GPS socket server is closed.");
+            error_msg = std::strerror(errno);
             Disconnect();
-            return -1;
+            return { size, error_msg };
         } else if (size < 0) {
             AIC_LOG(ERROR, "GPS socket write error: %s", strerror(errno));
-            return size;
+            error_msg = std::strerror(errno);
+            return { size, error_msg };
         } else if (size > 0) {
             offset += size;
             left -= size;
         }
     }
-    return offset > 0 ? offset : size;
+
+    return { offset > 0 ? offset : size, error_msg };
 }
 
 void
@@ -171,7 +180,8 @@ VirtualGpsReceiver::workThreadProc()
         if (!Connected()) {
             AIC_LOG(WARNING,
                     "Not connected to GPS server. Need to connect again.");
-            if (!Connect()) {
+            IOResult ior = Connect();
+            if (!std::get<0>(ior)) {
                 sleep(3);
                 AIC_LOG(ERROR, "Try to connect GPS server again");
                 continue;
@@ -182,7 +192,8 @@ VirtualGpsReceiver::workThreadProc()
 
         char     cmd = 0xFF;
         uint8_t* ptr = reinterpret_cast<uint8_t*>(&cmd);
-        int      res = Read(ptr, sizeof(cmd));
+        IOResult ior = Read(ptr, sizeof(cmd));
+        int      res = std::get<0>(ior);
         if (res < 0) {
             AIC_LOG(WARNING,
                     "%s",

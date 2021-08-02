@@ -11,7 +11,7 @@
 
 #include <linux/input.h>
 
-#include "InputReceiver.h"
+#include "input_receiver.h"
 
 class VirtualInputReceiver : public IInputReceiver
 {

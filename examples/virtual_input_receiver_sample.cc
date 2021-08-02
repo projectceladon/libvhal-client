@@ -1,4 +1,4 @@
-#include "VirtualInputReceiver.h"
+#include "virtual_input_receiver.h"
 #include <getopt.h>
 #include <iostream>
 #include <stdio.h>

@@ -7,6 +7,20 @@
 #include <thread>
 
 using CommandHandler = std::function<void(uint32_t cmd)>;
+/**
+ * @brief IOResult
+ *          { >=0, "" } on Success
+ *          see function description for ssize_t value interpretation.
+ *          {errno, "error msg"} on Failure
+ */
+using IOResult = std::tuple<ssize_t, std::string>;
+
+/**
+ * @brief ConnectionResult
+ *          { True, "" } on Success
+ *          { False, "error msg"} on Failure
+ */
+using ConnectionResult = std::tuple<bool, std::string>;
 enum
 {
     CMD_QUIT  = 0,
@@ -20,14 +34,14 @@ public:
     VirtualGpsReceiver(const std::string& ip, int port, CommandHandler ch);
     ~VirtualGpsReceiver();
 
-    bool    Connect();
-    bool    Disconnect();
-    bool    Connected();
-    ssize_t Write(const char* buf, size_t len);
+    ConnectionResult Connect();
+    ConnectionResult Disconnect();
+    bool             Connected();
+    IOResult         Write(const char* buf, size_t len);
 
 private:
-    ssize_t Read(uint8_t* buf, size_t len);
-    void    workThreadProc();
+    IOResult Read(uint8_t* buf, size_t len);
+    void     workThreadProc();
 
 public:
     enum Command
@@ -43,7 +57,7 @@ public:
 
 private:
     std::string                  mIp;
-    int                          mPort = 8766;
+    uint32_t                     mPort;
     CommandHandler               mCmdHandler;
     int                          mSockGps = -1;
     static const char*           kGpsSock;

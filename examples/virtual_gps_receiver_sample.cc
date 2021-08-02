@@ -1,5 +1,5 @@
-#include "ReceiverLog.h"
-#include "VirtualGpsReceiver.h"
+#include "receiver_log.h"
+#include "virtual_gps_receiver.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -56,9 +56,10 @@ do_geo_nmea(char* args)
         return -1;
     }
 
-    char   s[S_SIZE];
-    size_t s_len = 0;
-    int    ret   = -1;
+    char     s[S_SIZE];
+    size_t   s_len = 0;
+    IOResult ior;
+    int      ret = -1;
     printf("Note: currently, the size of s is fixed(S_SIZE: %d)\n", S_SIZE);
     memset(s, 0, S_SIZE);
     s_len = strlen(args);
@@ -66,7 +67,8 @@ do_geo_nmea(char* args)
     s[s_len++] = '\n';
 
 #ifdef USE_ANDROID_VIRTUAL_GPS_HAL
-    ret = vgr->Write(s, s_len);
+    ior = vgr->Write(s, s_len);
+    ret = std::get<0>(ior);
     if (ret > 0) {
         printf("Data: %s\n", args);
         printf("%s set ret(%d) data to GPS socket.\n", __func__, ret);
@@ -88,11 +90,12 @@ do_geo_fix(char* args)
         GEO_SAT2,
         NUM_GEO_PARAMS
     };
-    char*  p         = args;
-    int    top_param = -1;
-    double params[NUM_GEO_PARAMS];
-    int    n_satellites = 1;
-    int    ret          = -1;
+    char*    p         = args;
+    int      top_param = -1;
+    double   params[NUM_GEO_PARAMS];
+    int      n_satellites = 1;
+    IOResult ior;
+    int      ret = -1;
 
     if (!p) {
         printf("KO: argument '%s' is NULL\n", p);
@@ -221,7 +224,8 @@ do_geo_fix(char* args)
 
 #ifdef USE_ANDROID_VIRTUAL_GPS_HAL
         /* send it, then free */
-        ret = vgr->Write(s, s_len);
+        ior = vgr->Write(s, s_len);
+        ret = std::get<0>(ior);
         if (ret > 0) {
             s[s_len] = '\0';
             printf("Success to send s_len = %zd, ret = %d, s = %s\n",

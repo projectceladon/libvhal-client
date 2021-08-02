@@ -1,6 +1,6 @@
 
-#include "VirtualInputReceiver.h"
-#include "ReceiverLog.h"
+#include "virtual_input_receiver.h"
+#include "receiver_log.h"
 
 VirtualInputReceiver::VirtualInputReceiver(int id, int inputId)
 {
