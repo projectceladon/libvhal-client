@@ -23,6 +23,7 @@
  *
  */
 #include "istream_socket_client.h"
+#include "libvhal_common.h"
 #include <functional>
 #include <memory>
 #include <string>
@@ -145,10 +146,11 @@ public:
 
     /**
      * @brief Construct a new SensorInterface object
+     *        Throws std::invalid_argument excpetion.
      *
-     * @param WritePacket Client instance id.
+     * @param unix_conn_info Information needed to connect to the unix vhal socket.
      */
-    SensorInterface(int InstanceId);
+    SensorInterface(UnixConnectionInfo unix_conn_info);
 
     /**
      * @brief Destroy the SensorInterface object

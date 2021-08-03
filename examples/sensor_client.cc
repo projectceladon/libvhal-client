@@ -41,14 +41,38 @@ using namespace std;
 map<int32_t, int32_t> mSensorMap; //<sensorType, Enable/Disable Flag>
 mutex sensorMapMutex; // lock to guard mSensorMap
 
+static void
+usage(string program_name)
+{
+    cout << "\tUsage:   " << program_name
+         << " <socket-dir>\n"
+            "\tExample: "
+         << program_name
+         << "/opt/workdir/ipc/\n";
+    return;
+}
+
 int main(int argc, char** argv)
 {
+    if (argc < 2) {
+        usage(argv[0]);
+        exit(1);
+    }
+
+    string socketPath(argv[1]);
     int instanceId = 0;
     std::unique_ptr<SensorInterface> sensorHALIface;
     SensorInterface::SensorDataPacket event;
+    UnixConnectionInfo conn_info = { socketPath, instanceId };
 
     /* Create sensor Interface with LibVHAL */
-    sensorHALIface = make_unique<SensorInterface>(instanceId);
+    try {
+        sensorHALIface = make_unique<SensorInterface>(conn_info);
+    } catch (const std::exception& ex) {
+        cout << "Sensors creation error :"
+             << ex.what() << endl;
+        exit(1);
+    }
 
     /* Register a callback to receive VHAL sensor config packets */
     sensorHALIface->RegisterCallback([&]

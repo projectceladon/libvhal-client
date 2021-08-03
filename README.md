@@ -113,10 +113,13 @@ Here shown the E2E block diagram of sensors and API sequence to communicate with
 
 ### Steps to interact with libVHAL-Client from Streamer
 
-1. Create an object to libVHAL's SensorInterface class and pass client's instance ID.
+1. Create an object to libVHAL's SensorInterface class by passing vhal::client::UnixConnectionInfo.
 Then libVHAL will prepare and connect to Sensor server using UNIX domain sockets.
 ```cpp
-sensorHALIface = make_unique<SensorInterface>(mInstanceId);
+    UnixConnectionInfo conn_info = { socket_path, instance_id };
+    try {
+        sensorHALIface = make_unique<SensorInterface>(conn_info);
+    }
 ```
 
 2. Register a callback func to get sensor control packets upon received from Sensor VHAL server. CtrlPacket contains respective sensor's enable/disable info and sampling period.

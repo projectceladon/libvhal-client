@@ -29,18 +29,21 @@
 #include <string.h>
 #include <sys/types.h>
 
+#define SENSORS_UNIX_SOCKET "/sensors-socket"
+
 namespace vhal {
 namespace client {
 
-SensorInterface::SensorInterface(int InstanceId)
+SensorInterface::SensorInterface(UnixConnectionInfo unix_conn_info)
 {
-    std::string sockPath;
-
-    if (getenv("K8S_ENV") != NULL && strcmp(getenv("K8S_ENV"), "true") == 0) {
-        sockPath = "/conn/sensors-socket";
+    auto sockPath = unix_conn_info.socket_dir;
+    if (sockPath.length() == 0) {
+        throw std::invalid_argument("Please set a valid sensors socket_dir");
     } else {
-        sockPath = "/opt/workdir/ipc/sensors-socket";
-        sockPath += std::to_string(InstanceId);
+        sockPath += SENSORS_UNIX_SOCKET;
+        if (unix_conn_info.android_instance_id >= 0) {
+            sockPath += std::to_string(unix_conn_info.android_instance_id);
+        }
     }
 
     //Creating interface to communicate to VHAL via libvhal
