@@ -16,7 +16,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_link_libraries( ${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} )
 
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
 # Make sure the compiler can find include files for vhal-client library
 # when other libraries or executables link to vhal-client
 target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

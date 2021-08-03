@@ -52,10 +52,16 @@ Scanning dependencies of target camera_client
 [100%] Built target camera_client
 ```
 ```
-### To install/copy libvhal-clinet.so in to particular directory
+### To install/copy libvhal-clinet.so in to destination directory
+cmake -DCMAKE_INSTALL_PREFIX=<Absolute path to install>
+      -DCMAKE_INSTALL_LIBDIR=<Relative directory name to install libs>
+      -DCMAKE_INSTALL_BINDIR=<Relative directory name to install bins> ..
+
+Example:
 libvhal-client$mkdir build
 libvhal-client$cd build
-libvhal-client$cmake .. -DCMAKE_INSTALL_PREFIX=<Install folder name>
+cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/..
+      -DCMAKE_INSTALL_LIBDIR=lib ..
 libvhal-client$make
 libvhal-client$make install
 ```
