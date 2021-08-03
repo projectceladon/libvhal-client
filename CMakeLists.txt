@@ -3,6 +3,7 @@ project (vhal-client VERSION 1.0 DESCRIPTION "VHAL Client library written in C++
 
 message(STATUS "Project name: ${PROJECT_NAME}")
 
+
 set (TARGET_OS "linux")
 set (CMAKE_BUILD_TYPE Release)
 set (CMAKE_CXX_STANDARD 17)
@@ -21,6 +22,8 @@ include_directories (
 
 set (EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/bins/${TARGET_OS}")
 set (LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/${TARGET_OS}")
+set (vhal_version_major 0)
+set (vhal_version_minor 1)
 
 link_directories ("${LIBRARY_OUTPUT_PATH}")
 
