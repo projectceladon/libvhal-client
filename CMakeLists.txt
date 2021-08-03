@@ -5,6 +5,7 @@ option(BUILD_EXAMPLES "Build examples?" ON)
 
 message(STATUS "Project name: ${PROJECT_NAME}")
 
+
 set (TARGET_OS "linux")
 if(NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE Release)
@@ -25,6 +26,8 @@ include_directories (
 
 set (EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/bins/${TARGET_OS}")
 set (LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/${TARGET_OS}")
+set (vhal_version_major 0)
+set (vhal_version_minor 1)
 
 link_directories ("${LIBRARY_OUTPUT_PATH}")
 

@@ -7,8 +7,12 @@ list (APPEND SOURCES unix_stream_socket_client.cc)
 list (APPEND SOURCES video_sink.cc)
 list (APPEND SOURCES sensor_interface.cc)
 
+
 # Build libvhal-client
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    VERSION ${vhal_version_major}.${vhal_version_minor}
+    SOVERSION ${vhal_version_major})
 
 target_link_libraries( ${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} )
 
