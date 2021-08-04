@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.0)
-project (vhal-client VERSION 1.0 DESCRIPTION "VHAL Client library written in C++17 for Audio, Camera and Sensor" LANGUAGES CXX)
+project (vhal-client VERSION 0.1 DESCRIPTION "VHAL Client library written in C++17 for Audio, Camera, Sensor, GPS, Touch and Joystick" LANGUAGES CXX)
 
 option(BUILD_EXAMPLES "Build examples?" ON)
 
@@ -22,6 +22,7 @@ set (CMAKE_SHARED_LINKER_FLAGS "${LINK_FLAGS}")
 
 include_directories (
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/libvhal"
 )
 
 include(GNUInstallDirs)
@@ -32,7 +33,12 @@ set (vhal_version_minor 1)
 link_directories ("${LIBRARY_OUTPUT_PATH}")
 
 add_subdirectory (source)
+add_subdirectory (include/libvhal)
 if (BUILD_EXAMPLES)
   add_subdirectory (examples)
 endif()
+
+#Add pkg-config file
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/pkg-config.pc.cmake" ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY)
+install( FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig )
 # TODO: Add tests
