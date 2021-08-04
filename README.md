@@ -99,7 +99,33 @@ video_sink->SendDataPacket(inbuf.data(), inbuf_size);
 Example implementation to interact with libVHAL-client is present in examples/camera_client.cc
 
 ## Audio
-TODO
+Audio VHAL runs socket server for INET domains. VHAL Client library(libvhal-client.so) shall connect to socket server path.
+
+### Architecture
+Here shown the E2E block diagram of audio
+![image](docs/audio-e2e-block-diagram.JPG)
+
+### Steps for using libvhal-client for Audio Recording usecase
+1. Create an object to libVHAL's `vhal::client::AudioSink` by passing `vhal::client::TcpConnectionInfo`.
+Then libVHAL will prepare and connect to Audio server using TCP domain sockets.
+```cpp
+    TcpConnectionInfo conn_info = { ip_addr };
+    AudioSink audio_sink(conn_info);
+```
+
+2. Register a callback with `vhal::client::AudioSink` for Audio open/close commands.
+```cpp
+audio_sink->RegisterCallback([&](const AudioSink::CtrlMessage& ctrl_msg) {
+// Callback Implementation here
+}
+```
+
+3. Send the raw pcm audio data to libVHAL-client as below.
+```cpp
+audio_sink->SendDataPacket(inbuf.data(), inbuf_size);
+```
+
+Example implementation to interact with libVHAL-client is present in examples/audio_record_client.cc
 
 ## Sensor
 Sensor VHAL runs socket server for UNIX and INET domains. VHAL Client library(libvhal-client.so) shall connect to socket server path.

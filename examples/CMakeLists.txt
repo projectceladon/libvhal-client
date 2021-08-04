@@ -38,9 +38,12 @@ target_link_libraries(stream
     ${PROJECT_NAME}
     ${CMAKE_DL_LIBS}
 )
+add_executable (audio_record_client audio_record_client.cc)
+target_link_libraries (audio_record_client LINK_PUBLIC ${PROJECT_NAME})
 
 install(TARGETS camera_socket_client
                 camera_client
                 sensor_client
                 stream
+                audio_record_client
         DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})
