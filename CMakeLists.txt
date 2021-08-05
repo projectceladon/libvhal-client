@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.6)
 project (vhal-client VERSION 0.1 DESCRIPTION "VHAL Client library written in C++17 for Audio, Camera, Sensor, GPS, Touch and Joystick" LANGUAGES CXX)
 
 option(BUILD_EXAMPLES "Build examples?" ON)

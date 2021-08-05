@@ -44,10 +44,13 @@ struct UnixConnectionInfo {
 };
 
 /**
- * @brief VSOCK connection to the Android instance
- *
- */
-typedef UnixConnectionInfo VsockConnectionInfo;
+* @brief VSOCK connection to the Android instance
+*
+*/
+struct VsockConnectionInfo {
+    // Specifies the Context identifier of the Android VM instance.
+    int android_vm_cid = -1;
+};
 
 } // namespace client
 } // namespace vhal

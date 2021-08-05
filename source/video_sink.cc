@@ -22,6 +22,7 @@
 #include "video_sink.h"
 #include "video_sink_impl.h"
 #include "unix_stream_socket_client.h"
+#include "vsock_stream_socket_client.h"
 #include <functional>
 #include <memory>
 #include <string>
@@ -49,6 +50,18 @@ VideoSink::VideoSink(UnixConnectionInfo unix_conn_info)
     auto unix_sock_client =
       std::make_unique<UnixStreamSocketClient>(std::move(sockPath));
     impl_ = std::make_unique<Impl>(std::move(unix_sock_client));
+}
+
+VideoSink::VideoSink(VsockConnectionInfo vsock_conn_info)
+{
+
+    if(vsock_conn_info.android_vm_cid == -1) {
+        throw std::invalid_argument("Please set a valid socket_dir");
+    }
+    //Creating interface to communicate to VHAL via libvhal
+    auto vsock_sock_client =
+      std::make_unique<VsockStreamSocketClient>(std::move(vsock_conn_info.android_vm_cid));
+    impl_ = std::make_unique<Impl>(std::move(vsock_sock_client));
 }
 
 VideoSink::~VideoSink() {}
