@@ -119,6 +119,15 @@ public:
      *
      */
     VideoSink(UnixConnectionInfo unix_conn_info);
+    /**
+     * @brief Construct a default VideoSink object from the Android vm cid.
+     *        Throws std::invalid_argument excpetion.
+     *
+     * @param vsock_conn_info Information needed to connect to the vsock vhal socket.
+     *
+     */
+
+    VideoSink(VsockConnectionInfo vsock_conn_info);
 
     /**
      * @brief Destroy the VideoSink object

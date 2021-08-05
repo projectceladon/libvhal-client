@@ -6,6 +6,7 @@ include_directories (
 list (APPEND SOURCES unix_stream_socket_client.cc)
 list (APPEND SOURCES video_sink.cc)
 list (APPEND SOURCES sensor_interface.cc)
+list (APPEND SOURCES vsock_stream_socket_client.cc)
 
 
 # Build libvhal-client
