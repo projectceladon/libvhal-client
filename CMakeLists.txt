@@ -21,8 +21,7 @@ set (CMAKE_EXE_LINKER_FLAGS "${LINK_FLAGS}")
 set (CMAKE_SHARED_LINKER_FLAGS "${LINK_FLAGS}")
 
 include_directories (
-	"${CMAKE_CURRENT_SOURCE_DIR}/include/"
-	"${CMAKE_CURRENT_SOURCE_DIR}/include/libvhal"
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/libvhal"
 )
 
 include(GNUInstallDirs)
