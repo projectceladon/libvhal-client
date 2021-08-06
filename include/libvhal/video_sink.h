@@ -149,6 +149,14 @@ public:
     /**
      * @brief Send an encoded Camera packet to VHAL.
      *
+     * This function sends data packet with the header containing size of the data
+     * packet. It's call is equivalent to the following 2 calls of SendRawPacket:
+     *
+     * \code
+     * SendRawPacket((uint8_t*)&size, sizeof(size));
+     * SendRawPacket(packet, size);
+     * \endcode
+     *
      * @param packet Encoded Camera packet.
      * @param size Size of the Camera packet.
      *
@@ -158,6 +166,21 @@ public:
      *         string is the status message.
      */
     IOResult SendDataPacket(const uint8_t* packet, size_t size);
+
+    /**
+     * @brief Send an raw Camera packet to VHAL for cases like I420
+     *        where data is fixed always. when using this api both
+     *        vhal and libvHAL-client knows packet size prior
+     *
+     * @param packet raw Camera packet.
+     * @param size Size of the Camera packet.
+     *
+     * @return ssize_t No of bytes written to VHAL, -1 if failure.
+     * @return IOResult tuple<ssize_t, std::string>.
+     *         ssize_t No of bytes sent and -1 incase of failure
+     *         string is the status message.
+     */
+    IOResult SendRawPacket(const uint8_t* packet, size_t size);
 
 private:
     class Impl;

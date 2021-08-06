@@ -365,7 +365,7 @@ int main(int argc, char** argv)
                           yuyv422_to_yuv420sp(pkt->data, buf_list[buf_count % BUF_COUNT], width, height, false);
                           // Write payload
                           if (auto [sent, error_msg] =
-                                video_sink->SendDataPacket(buf_list[buf_count % BUF_COUNT],
+                                video_sink->SendRawPacket(buf_list[buf_count % BUF_COUNT],
                                                             inbuf_size);
                               sent < 0) {
                               cout << "Error in writing payload to Camera VHal: "
