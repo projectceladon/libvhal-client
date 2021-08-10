@@ -71,9 +71,9 @@ main(int argc, char** argv)
 
     cout << "Waiting Camera Open callback..\n";
 
-    video_sink->RegisterCallback([&](const VideoSink::CtrlMessage& ctrl_msg) {
+    video_sink->RegisterCallback([&](const VideoSink::camera_config_cmd_t& ctrl_msg) {
         switch (ctrl_msg.cmd) {
-            case VideoSink::Command::kOpen: {
+            case VideoSink::camera_cmd_t::CMD_OPEN: {
                 cout << "Received Open command from Camera VHal\n";
                 auto video_params = ctrl_msg.video_params;
                 auto codec_type   = video_params.codec_type;
@@ -134,7 +134,7 @@ main(int argc, char** argv)
                 });
                 break;
             }
-            case VideoSink::Command::kClose:
+            case VideoSink::camera_cmd_t::CMD_CLOSE:
                 cout << "Received Close command from Camera VHal\n";
                 stop = true;
                 file_src_thread.join();

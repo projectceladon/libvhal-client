@@ -58,9 +58,9 @@ VsockStreamSocketClient::Send(const uint8_t* data, size_t size)
 }
 
 IOResult
-VsockStreamSocketClient::Recv(uint8_t* data, size_t size)
+VsockStreamSocketClient::Recv(uint8_t* data, size_t size, uint8_t flag)
 {
-    return impl_->Recv(data, size);
+    return impl_->Recv(data, size, flag);
 }
 
 void

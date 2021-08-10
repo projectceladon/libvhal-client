@@ -82,5 +82,16 @@ IOResult VideoSink::SendRawPacket(const uint8_t* packet, size_t size)
     return impl_->SendRawPacket(packet, size);
 }
 
+VideoSink::camera_capability_t*
+VideoSink::GetCameraCapabilty()
+{
+    return impl_->GetCameraCapabilty();
+}
+
+bool
+VideoSink::SetCameraCapabilty(camera_capability_t *camera_config)
+{
+    return impl_->SetCameraCapabilty(camera_config);
+}
 }; // namespace client
 } // namespace vhal

@@ -29,15 +29,19 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <cstring>
 #include <system_error>
 extern "C"
 {
 #include <sys/poll.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/socket.h>
 }
 #include <thread>
 #include <tuple>
+#include <mutex>
+#include <condition_variable>
 
 using namespace std;
 using namespace chrono_literals;
@@ -62,53 +66,50 @@ public:
                         this_thread::sleep_for(3ms);
                         continue;
                     }
+                    cout << "Connected to Camera VHal!\n";
                 }
+
+                cmd_capability_ = new camera_capability_t();
                 // connected ...
-                cout << "Connected to Camera VHal!\n";
-
-                struct pollfd fds[1];
-                const int     timeout_ms = 1 * 1000; // 1 sec timeout
-                int           ret;
-
-                // watch socket for input
-                fds[0].fd     = socket_client_->GetNativeSocketFd();
-                fds[0].events = POLLIN;
-
                 do {
-                    ret = poll(fds, std::size(fds), timeout_ms);
-                    if (ret == -1) {
-                        throw system_error(errno, system_category());
-                    }
-                    if (!ret) {
+                    cout << "Camera VHal has some message for us!\n";
+
+                    size_t header_size = sizeof(camera_header_t);
+                    camera_header_t cmd_header;
+                    std::tuple<ssize_t, std::string> response;
+  
+                    response = socket_client_->Recv(
+                        reinterpret_cast<uint8_t*>(&cmd_header),
+                        header_size, MSG_WAITALL);
+                    if (get<0>(response) != header_size) {
+                        cout << "Failed to read message from VideoSink: "
+                        << get<1>(response)
+                        << ", going to disconnect and reconnect.\n";
+                        socket_client_->Close();
+                        // FIXME: What to do ?? Exit ?
                         continue;
                     }
-                    if (fds[0].revents & POLLIN) {
-                        cout << "Camera VHal has some message for us!\n";
-
-                        VideoSink::CtrlMessage ctrl_msg;
-
-                        if (auto [received, recv_err_msg] =
-                              socket_client_->Recv(
-                                reinterpret_cast<uint8_t*>(&ctrl_msg),
-                                sizeof(ctrl_msg));
-                            received != sizeof(VideoSink::CtrlMessage)) {
-                            cout << "Failed to read message from VideoSink: "
-                                 << recv_err_msg
-                                 << ", going to disconnect and reconnect.\n";
-                            socket_client_->Close();
+                    switch(cmd_header.type) {
+                        case camera_packet_type_t::CAPABILITY:
+                            cout <<"received capability" <<"\n";
+                            if(!handle_capability())
+                                continue;
                             break;
-                        }
-                        // success, invoke client callback
-                        callback_(cref(ctrl_msg));
-                    } else {
-                        if (fds[0].revents & (POLLERR|POLLHUP)) {
-                            cout << "VideoSink Poll Fail event: "
-                                << fds[0].revents
-                                << ", reconnect\n";
-                            socket_client_->Close();
+
+                        case camera_packet_type_t::ACK:
+                            cout <<"received ack" <<"\n";
+                            if(!handle_ack())
+                                continue;
                             break;
-                        }
-                        cout << "VideoSink : Poll revents " << fds[0].revents << "\n";
+
+                        case camera_packet_type_t::CAMERA_CONFIG:
+                            cout <<"received config" <<"\n";
+                            if(!handle_cmd())
+                                continue;
+                            break;
+                        default :
+                            cout <<"invalid header type received "<<"\n";
+                            break;
                     }
                 } while (should_continue_);
             }
@@ -146,14 +147,13 @@ public:
                   + get<1>(response);
                 return response;
             }
+
         // success
         return response;
     }
 
     IOResult SendRawPacket(const uint8_t* packet, size_t size)
     {
-        std::string result_error_msg = "";
-
       	std::tuple<ssize_t, std::string> response;
 
         // Write payload
@@ -162,16 +162,134 @@ public:
                 get<1>(response) = "Error in writing payload to Camera VHal: "
                   + get<1>(response);
                 return response;
-            }
+        }
+
         // success
         return response;
     }
+
+    camera_capability_t* GetCameraCapabilty()
+    {
+        std::tuple<ssize_t, std::string> response;
+        camera_header_t header_packet;
+
+        header_packet.type = VideoSink::camera_packet_type_t::REQUST_CAPABILITY;
+        response = SendRawPacket((unsigned char*)&header_packet, sizeof(camera_header_t));
+        if (get<0>(response) == -1) {
+            get<1>(response) = "Error in sending request capability header to Camera VHal: "
+              + get<1>(response);
+            return NULL;
+        }
+
+        std::unique_lock<std::mutex> lck(mutex_);
+        wait_api_data.wait(lck);
+
+        cout << " returning GetCameraCapabilty result" << "\n";
+        return cmd_capability_;
+    }
+
+    bool SetCameraCapabilty(camera_capability_t *camera_config)
+    {
+        std::tuple<ssize_t, std::string> response;
+        
+        camera_header_t header_packet;
+        header_packet.type = camera_packet_type_t::CAMERA_CONFIG;
+        header_packet.size = sizeof(camera_capability_t);
+
+        response = SendRawPacket((unsigned char*)&header_packet, sizeof(camera_header_t));
+        if (get<0>(response) == -1) {
+            get<1>(response) = "Error in sending config header to Camera VHal: "
+              + get<1>(response);
+            return false;
+        }
+
+        response = SendRawPacket((unsigned char*)camera_config, sizeof(camera_capability_t));
+        if (get<0>(response) == -1) {
+            get<1>(response) = "Error in sending config to Camera VHal: "
+              + get<1>(response);
+            return false;
+        }
+
+        std::unique_lock<std::mutex> lck(mutex_);
+        wait_api_data.wait(lck);
+        cout << " returning SetCameraCapabilty result" << "\n";
+
+        return true;
+    }
+
+    bool handle_ack()
+    {
+        size_t ack_pkt_size = sizeof(CameraAck);
+        std::tuple<ssize_t, std::string> response;
+
+        CameraAck ack_pkt;
+        response = socket_client_->Recv(
+        reinterpret_cast<uint8_t*>(&ack_pkt),
+        ack_pkt_size, MSG_WAITALL);
+        if(get<0>(response) != ack_pkt_size) {
+            cout << "Failed to read message from VideoSink: "
+            << get<1>(response)
+            << ", going to disconnect and reconnect.\n";
+            socket_client_->Close();
+            return false;
+        }
+        wait_api_data.notify_one();
+        return true;
+    }
+    bool handle_capability()
+    {
+        size_t capability_pkt_size = sizeof(camera_capability_t);
+        std::tuple<ssize_t, std::string> response;
+
+        response = socket_client_->Recv(
+        reinterpret_cast<uint8_t*>(cmd_capability_),
+        capability_pkt_size, MSG_WAITALL);
+        if (get<0>(response) != capability_pkt_size) {
+            cout << "Failed to read message from VideoSink: "
+            << get<1>(response)
+            << ", going to disconnect and reconnect.\n";
+            socket_client_->Close();
+            return false;
+            // FIXME: What to do ?? Exit ?
+        }
+        cout <<"params codec type "<<cmd_capability_->codec_type <<"resolution"<<cmd_capability_->resolution<<"\n";
+        wait_api_data.notify_one();
+
+        return true;
+    }
+    bool handle_cmd()
+    {
+        size_t cmd_pkt_size = sizeof(camera_config_cmd_t);
+        std::tuple<ssize_t, std::string> response;
+
+        camera_config_cmd_t cmd_pkt;
+        response = socket_client_->Recv(
+        reinterpret_cast<uint8_t*>(&cmd_pkt),
+        cmd_pkt_size, MSG_WAITALL);
+        if(get<0>(response) != cmd_pkt_size) {
+            cout << "Failed to read message from VideoSink: "
+            << get<1>(response)
+            << ", going to disconnect and reconnect.\n";
+            socket_client_->Close();
+            return false;
+            // FIXME: What to do ?? Exit ?
+        }
+
+        cout << "camera cmd received "<< (int)cmd_pkt.cmd <<"\n";
+        callback_(cref(cmd_pkt));
+        return true;
+    }
+
 
 private:
     CameraCallback                  callback_ = nullptr;
     unique_ptr<IStreamSocketClient> socket_client_;
     thread                          vhal_talker_thread_;
     atomic<bool>                    should_continue_ = true;
+
+    camera_capability_t *cmd_capability_;
+    std::mutex mutex_;
+    std::condition_variable wait_api_data;
 };
 
 } // namespace client

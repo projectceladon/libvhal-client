@@ -348,6 +348,16 @@ video_sink->SendDataPacket(inbuf.data(), inbuf_size);
 video_sink->SendRawPacket(inbuf.data(), inbuf_size);
 ```
 
+5. To read vhal supported capability call GetCameraCapabilty after connection 
+   estabilish. On success, this api will return camera capability of type struct
+   VideoParams
+```cpp
+VideoParams* GetCameraCapabilty();
+```
+6. To set libvhal capability to vhal call SetCameraCapabilty
+```cpp
+bool SetCameraCapabilty(VideoParams *camera_config);;
+```
 Example implementation to interact with libVHAL-client is present in examples/camera_client.cc
 
 ## Audio

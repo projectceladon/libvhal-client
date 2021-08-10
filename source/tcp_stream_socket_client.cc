@@ -58,7 +58,7 @@ TcpStreamSocketClient::Send(const uint8_t* data, size_t size)
 }
 
 IOResult
-TcpStreamSocketClient::Recv(uint8_t* data, size_t size)
+TcpStreamSocketClient::Recv(uint8_t* data, size_t size, uint8_t flag)
 {
     return impl_->Recv(data, size);
 }

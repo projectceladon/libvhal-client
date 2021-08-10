@@ -39,6 +39,7 @@
 
 #include <linux/videodev2.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 extern "C" {
     #include <libavformat/avformat.h>
@@ -82,7 +83,7 @@ void get_all_dev_nodes()
         sprintf(dev_name, "/dev/video%d", devId);
 
         if((fd = open(dev_name, O_RDONLY)) == -1) {
-	    continue;
+            continue;
 	}
 
         if(ioctl(fd, VIDIOC_QUERYCAP, &video_cap) == -1)
@@ -91,6 +92,7 @@ void get_all_dev_nodes()
 	    if(!strcmp((const char*)video_cap.driver, "v4l2 loopback"))
 	        strcpy(device_index, dev_name);
         }
+        close(fd);
     }
 
 }
@@ -326,8 +328,11 @@ int open_camera()
 int main(int argc, char** argv)
 {
     atomic<bool> stop = true;
-    int          instance_id = 4;
+    int          instance_id = 3;
     thread       file_src_thread;
+    atomic<bool> request_negotiation = false;
+
+	//search for virtual device nodes
     get_all_dev_nodes();
 
     cout <<"open camera " << device_index;
@@ -347,11 +352,11 @@ int main(int argc, char** argv)
     open_camera();
 
     video_sink->RegisterCallback(
-      [&](const VideoSink::CtrlMessage& ctrl_msg) {
+      [&](const VideoSink::camera_config_cmd_t& ctrl_msg) {
           cout << "received new cmd to process ";
 
           switch (ctrl_msg.cmd) {
-              case VideoSink::Command::kOpen:
+              case VideoSink::camera_cmd_t::CMD_OPEN:
 	          cout << "Received Open command from Camera VHal\n";
                   stop = false;
                   file_src_thread = thread([&stop,
@@ -382,10 +387,14 @@ int main(int argc, char** argv)
                   });
                   break;
 
-              case VideoSink::Command::kClose:
+              case VideoSink::camera_cmd_t::CMD_CLOSE:
                   cout << "Received Close command from Camera VHal\n";
                   stop = true;
                   file_src_thread.join();
+                  break;
+
+             case VideoSink::camera_cmd_t::CMD_NONE:
+                  cout << "Received None\n";
                   break;
 
               default:
@@ -394,6 +403,15 @@ int main(int argc, char** argv)
           }
       });
 
+        if(!request_negotiation) {
+            video_sink->GetCameraCapabilty();
+
+            VideoSink::camera_capability_t camera_config;
+            camera_config.codec_type = VideoSink::VideoCodecType::kI420;
+            camera_config.resolution = VideoSink::FrameResolution::kVGA;
+            video_sink->SetCameraCapabilty(&camera_config);
+            request_negotiation = true;
+        }
     // we need to be alive :)
     while (true) {
         this_thread::sleep_for(5ms);

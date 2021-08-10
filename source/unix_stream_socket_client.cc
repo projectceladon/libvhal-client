@@ -57,7 +57,7 @@ UnixStreamSocketClient::Send(const uint8_t* data, size_t size)
 }
 
 IOResult
-UnixStreamSocketClient::Recv(uint8_t* data, size_t size)
+UnixStreamSocketClient::Recv(uint8_t* data, size_t size, uint8_t flag)
 {
     return impl_->Recv(data, size);
 }

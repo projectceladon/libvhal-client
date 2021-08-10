@@ -40,68 +40,111 @@ namespace client {
 class VideoSink
 {
 public:
+
+
     /**
-     * @brief
+     * @brief protocol ack notification flags
      *
      */
-    enum class VideoCodecType
+
+    enum CameraAck {
+        NACK_CONFIG =0,
+        ACK_CONFIG = 1,
+    };
+    /**
+     * @brief data transfer control cmd
+     *
+     */
+ 
+    enum camera_packet_type_t : uint32_t {
+        REQUST_CAPABILITY = 0,
+        CAPABILITY = 1,
+        CAMERA_CONFIG = 2,
+        CAMERA_DATA = 3,
+        ACK = 4
+    };
+
+    /**
+     * @brief header info to share host capabality
+     * @size is sizeof(payload). Payload's size depends on the type of the data. See #camera_packet_type_t.
+     *
+     */
+
+    struct camera_header_t
     {
-        kH264 = 0,
-        kI420
+        camera_packet_type_t type;
+        uint32_t size;
     };
 
     /**
      * @brief
      *
      */
-    enum class FrameResolution
-    {
-        k480p = 0,
-        k720p,
-        k1080p
+    enum VideoCodecType : uint32_t {
+        kH264 = 0x01,
+        kI420 = 0x04
+    };
+
+    /**
+     * @brief
+     *
+     */
+    enum FrameResolution : uint32_t {
+        kVGA = 0x01,    // 640x480
+        k720p = 0x02,   // 1280x720
+        k1080p = 0x04  // 1920x1080
     };
 
     /**
      * @brief Camera capabilities that needs to be supported by Remote camera.
      *
      */
-    struct VideoParams
+    struct camera_capability_t
     {
         VideoCodecType  codec_type = VideoCodecType::kH264;
-        FrameResolution resolution = FrameResolution::k480p;
-        uint32_t        reserved[4];
+        FrameResolution resolution = FrameResolution::kVGA;
+        uint32_t        reserved[6];
+    };
+
+    /**
+     * @brief encapsulated structure to exchange both data and control
+     *
+     */
+ 
+    struct camera_packet_t {
+        camera_header_t header;
+        uint8_t *payload;
     };
 
     /**
      * @brief Camera operation commands sent by Camera VHAL to client.
      *
      */
-    enum class Command
-    {
-        kOpen  = 11,
-        kClose = 12,
-        kNone  = 13
+    enum camera_cmd_t {
+        CMD_OPEN  = 11,
+        CMD_CLOSE = 12,
+        CMD_NONE  = 15
     };
 
     /**
      * @brief Camera VHAL version.
      *
      */
-    enum class VHalVersion
-    {
-        kV1 = 0, // decode out of camera vhal
-        kV2 = 1, // decode in camera vhal
+    enum camera_version_t {
+        CAMERA_VHAL_VERSION_0 = 0, // decode out of camera vhal
+        CAMERA_VHAL_VERSION_1 = 1, // decode in camera vhal
     };
 
+
     /**
-     * @brief Camera control message sent by Camera VHAL to client.
+     * @brief Camera config sent by Camera VHAL to client.
      *
      */
-    struct CtrlMessage
+    struct camera_config_cmd_t
     {
-        VHalVersion version = VHalVersion::kV2;
-        Command     cmd     = Command::kNone;
-        VideoParams video_params;
+        camera_version_t version = camera_version_t::CAMERA_VHAL_VERSION_1;
+        camera_cmd_t     cmd     = camera_cmd_t::CMD_NONE;
+        camera_capability_t video_params;
     };
 
     /**
@@ -109,7 +152,7 @@ public:
      * OpenCamera and CloseCamera cases.
      *
      */
-    using CameraCallback = std::function<void(const CtrlMessage& ctrl_msg)>;
+    using CameraCallback = std::function<void(const camera_config_cmd_t& ctrl_msg)>;
 
     /**
      * @brief Construct a default VideoSink object from the Android instance id.
@@ -181,6 +224,27 @@ public:
      *         string is the status message.
      */
     IOResult SendRawPacket(const uint8_t* packet, size_t size);
+
+    /**
+     * @brief GetCameraCapabilty
+     *        api is called to get vhal capability
+     *        client should call this api after successful connection 
+     *
+     * @return camera_capability_t which provides vhal capabilites
+     * @return NULL on failure
+     */
+    camera_capability_t* GetCameraCapabilty();
+
+    /**
+     * @brief Set Camera Capability.
+     *        api is called to set camera libvhal config to vhal
+     *
+     * @param camera_capability_t
+     *
+     * @return true libvhal able to send camera config
+     * @return false libvhal failed to send camera config
+     */
+    bool SetCameraCapabilty(camera_capability_t *camera_config);
 
 private:
     class Impl;

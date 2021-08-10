@@ -40,7 +40,7 @@ extern "C"
     #include <sys/un.h>
     #include <unistd.h>
 }
-#define DEFAULT_PORT_CAMERA 1234
+#define DEFAULT_PORT_CAMERA 1982
 
 namespace vhal {
 namespace client {
@@ -52,7 +52,7 @@ public:
     {
         server_.svm_cid = android_vm_cid;
         server_.svm_family = AF_VSOCK;
-        server_.svm_port = htons(DEFAULT_PORT_CAMERA);
+        server_.svm_port = DEFAULT_PORT_CAMERA;
     }
     ~Impl() { Close(); }
 
@@ -93,10 +93,10 @@ public:
         return { sent, error_msg };
     }
 
-    IOResult Recv(uint8_t* data, size_t size)
+    IOResult Recv(uint8_t* data, size_t size, uint8_t flag)
     {
         std::string error_msg = "";
-        ssize_t received = ::recv(fd_, data, size, 0);
+        ssize_t received = ::recv(fd_, data, size, flag);
         if (received  == -1) {
             std::cout << ". Recv() args: fd: " << fd_ << ", data: " << data
                       << ", size: " << size << "\n";

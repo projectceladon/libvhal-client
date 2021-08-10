@@ -96,11 +96,15 @@ public:
      *
      * @param data Recevie raw data from server
      * @param size
+     * @param flag - default value is 0 which is equivalent to read
+     *               please refer to recv flags and how to use them
+     *               https://man7.org/linux/man-pages/man2/recv.2.html
+     *
      * @return IOResult
      *         <Number of bytes received, Empty string> on Success
      *         <Error number, Error message on Failure> on Failure
      */
-    virtual IOResult Recv(uint8_t* data, size_t size) = 0;
+    virtual IOResult Recv(uint8_t* data, size_t size, uint8_t flag = 0) = 0;
 
     /**
      * @brief Closes socket connection.

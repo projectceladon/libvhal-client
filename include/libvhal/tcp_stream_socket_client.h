@@ -41,7 +41,7 @@ public:
     bool             Connected() const override;
     int              GetNativeSocketFd() const override;
     IOResult         Send(const uint8_t* data, size_t size) override;
-    IOResult         Recv(uint8_t* data, size_t size) override;
+    IOResult         Recv(uint8_t* data, size_t size, uint8_t flag = 0) override;
     void             Close() override;
 
 private:
