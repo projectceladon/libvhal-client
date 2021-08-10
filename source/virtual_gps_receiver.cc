@@ -11,6 +11,9 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+namespace vhal {
+namespace client {
+
 const char*       VirtualGpsReceiver::kGpsSock;
 const std::string VirtualGpsReceiver::gpsQuitMsg = "{ \"key\" : \"gps-quit\" }";
 const std::string VirtualGpsReceiver::gpsStartMsg =
@@ -229,3 +232,6 @@ VirtualGpsReceiver::workThreadProc()
     }
     AIC_LOG(DEBUG, "GPS work thread exit");
 }
+
+} // namespace client
+} // namespace vhal

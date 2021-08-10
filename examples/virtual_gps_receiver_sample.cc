@@ -18,6 +18,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+using namespace vhal::client;
 #define USE_ANDROID_VIRTUAL_GPS_HAL
 #define S_SIZE 1024
 

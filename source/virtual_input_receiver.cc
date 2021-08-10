@@ -1,6 +1,8 @@
 
 #include "virtual_input_receiver.h"
 #include "receiver_log.h"
+namespace vhal {
+namespace client {
 
 VirtualInputReceiver::VirtualInputReceiver(int id, int inputId)
 {
@@ -270,44 +272,6 @@ VirtualInputReceiver::onJoystickMessage(const std::string& msg)
 }
 
 bool
-VirtualInputReceiver::joystickEnable()
-{
-    if (mDebug)
-        printf("%s:%d enable joystick down\n", __func__, __LINE__);
-    onJoystickMessage("k 631 1\n");
-    onJoystickMessage("c\n");
-    usleep(2000);
-    if (mDebug)
-        printf("%s:%d enable joystick up\n", __func__, __LINE__);
-    onJoystickMessage("k 631 0\n");
-    onJoystickMessage("c\n");
-    mJoystickStatus = true;
-    return true;
-}
-
-bool
-VirtualInputReceiver::joystickDisable()
-{
-    if (mDebug)
-        printf("%s:%d disable joystick down\n", __func__, __LINE__);
-    onJoystickMessage("k 632 1\n");
-    onJoystickMessage("c\n");
-    usleep(2000);
-    if (mDebug)
-        printf("%s:%d disable joystick up\n", __func__, __LINE__);
-    onJoystickMessage("k 632 0\n");
-    onJoystickMessage("c\n");
-    mJoystickStatus = false;
-    return true;
-}
-
-bool
-VirtualInputReceiver::getJoystickStatus()
-{
-    return mJoystickStatus;
-}
-
-bool
 VirtualInputReceiver::ProcessOneJoystickCommand(const std::string& cmd)
 {
     if (mDebug)
@@ -356,6 +320,33 @@ VirtualInputReceiver::ProcessOneJoystickCommand(const std::string& cmd)
                 printf("code = %d, value = %d\n", code, value);
             SendEvent(EV_ABS, code, value);
             break;
+        case 'i': // insert joystick
+            if (mDebug)
+                printf("%s:%d enable joystick down\n", __func__, __LINE__);
+            SendEvent(EV_KEY, 631, 1);
+            SendCommit();
+
+            usleep(2000);
+
+            if (mDebug)
+                printf("%s:%d enable joystick up\n", __func__, __LINE__);
+            SendEvent(EV_KEY, 631, 0);
+            SendCommit();
+            break;
+        case 'p': // pull out joystick
+            if (mDebug)
+                printf("%s:%d disable joystick down\n", __func__, __LINE__);
+            SendEvent(EV_KEY, 632, 1);
+            SendCommit();
+
+            usleep(2000);
+
+            if (mDebug)
+                printf("%s:%d disable joystick up\n", __func__, __LINE__);
+            SendEvent(EV_KEY, 632, 0);
+            SendCommit();
+
+            break;
         default:
             break;
     }
@@ -400,18 +391,5 @@ VirtualInputReceiver::onKeyCode(uint16_t scanCode, uint32_t mask)
     return 0;
 }
 
-int
-VirtualInputReceiver::onKeyChar(char ch)
-{
-    // printf("%s\n", __func__);
-
-    return 0;
-}
-
-int
-VirtualInputReceiver::onText(const char* msg)
-{
-    // printf("%s\n", __func__);
-
-    return 0;
-}
+} // namespace client
+} // namespace vhal

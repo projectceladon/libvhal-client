@@ -6,6 +6,9 @@
 #include <mutex>
 #include <thread>
 
+namespace vhal {
+namespace client {
+
 using CommandHandler = std::function<void(uint32_t cmd)>;
 /**
  * @brief IOResult
@@ -67,4 +70,6 @@ private:
     bool                         mStop = false;
 };
 
+} // namespace client
+} // namespace vhal
 #endif // __VIRTUAL_GPS_RECEIVER_H__

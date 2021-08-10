@@ -5,17 +5,17 @@
 #include <string>
 
 using namespace std;
+using namespace vhal::client;
 int debug = 0x3;
 void
 TestButton1(VirtualInputReceiver* vir)
 {
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BUTTON_1\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 288 1\n"); // BUTTON_1 Down
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 288 1\nc\n"); // BUTTON_1 Down
+
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 288 0\n"); // BUTTON_1 Up
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 288 0\nc\n"); // BUTTON_1 Up
 }
 
 void
@@ -23,11 +23,10 @@ TestButtonMode(VirtualInputReceiver* vir)
 {
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BUTTON_MODE\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 316 1\n"); // BUTTON_MODE Down
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 316 1\nc\n"); // BUTTON_MODE Down
+
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 316 0\n"); // BUTTON_MODE Up
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 316 0\nc\n"); // BUTTON_MODE Up
 }
 
 void
@@ -35,188 +34,143 @@ TestJoystick(VirtualInputReceiver* vir)
 {
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_TL\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 310 1\n"); // BTN_TL Down
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 310 1\nc\n"); // BTN_TL Down
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 310 0\n"); // BTN_TL Up
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 310 0\nc\n"); // BTN_TL Up
 
     usleep(200 * 1000);
 
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_TR\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 311 1\n"); // BTN_TR Down
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 311 1\nc\n"); // BTN_TR Down
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 311 0\n"); // BTN_TR Up
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 311 0\nc\n"); // BTN_TR Up
+
     usleep(200 * 1000);
 
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_TL2\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 312 1\n"); // BTN_TL2 Down
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 312 1\nc\n"); // BTN_TL2 Down
     usleep(40000);
-    vir->onJoystickMessage("a 62 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 0\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 62 50\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 50\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 62 100\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 100\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 62 150\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 150\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 62 200\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 200\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 62 255\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 255\nc\n");
 
     usleep(200 * 1000);
 
-    vir->onJoystickMessage("a 62 200\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 200\nc\n");
     usleep(40000);
 
-    vir->onJoystickMessage("a 62 150\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 150\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 62 100\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 100\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 62 50\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 50\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 62 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 62 0\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("k 312 0\n"); // BTN_TL2 Up
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 312 0\nc\n"); // BTN_TL2 Up
+
     usleep(200 * 1000);
 
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_TR2\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 313 1\n"); // BTN_TR2 Down
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 313 1\nc\n"); // BTN_TR2 Down
     usleep(40000);
-    vir->onJoystickMessage("a 63 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 0\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 63 50\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 50\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 63 100\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 100\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 63 150\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 150\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 63 200\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 200\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 63 255\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 255\nc\n");
 
     usleep(200 * 1000);
 
-    vir->onJoystickMessage("a 63 200\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 200\nc\n");
     usleep(40000);
-
-    vir->onJoystickMessage("a 63 150\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 150\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 63 100\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 100\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 63 50\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 50\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("a 63 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 63 0\nc\n");
     usleep(40000);
-    vir->onJoystickMessage("k 313 0\n"); // BTN_TR2 Up
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 313 0\nc\n"); // BTN_TR2 Up
 
     usleep(200 * 1000);
 
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_SELECT\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 314 1\n"); // BTN_SELECT Down
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 314 1\nc\n"); // BTN_SELECT Down
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 314 0\n"); // BTN_SELECT Up
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 314 0\nc\n"); // BTN_SELECT Up
     usleep(200 * 1000);
 
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_START\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 315 1\n"); // BTN_START Down
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 315 1\nc\n"); // BTN_START Down
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 315 0\n"); // BTN_START Up
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 315 0\nc\n"); // BTN_START Up
     usleep(200 * 1000);
 
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_THUMBL\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 317 1\n"); // BTN_THUMBL Down
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 317 1\nc\n"); // BTN_THUMBL Down
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 317 0\n"); // BTN_THUMBL Up
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 317 0\nc\n"); // BTN_THUMBL Up
     usleep(200 * 1000);
 
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_THUMBR\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 318 1\n"); // BTN_THUMBR Down
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 318 1\nc\n"); // BTN_THUMBR Down
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 318 0\n"); // BTN_THUMBR Up
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 318 0\nc\n"); // BTN_THUMBR Up
     usleep(200 * 1000);
 
     // BTN_Y
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_Y\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 308 1\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 308 1\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 308 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 308 0\nc\n");
     usleep(200 * 1000);
 
     // BTN_X
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_X\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 307 1\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 307 1\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 307 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 307 0\nc\n");
     usleep(200 * 1000);
 
     // BTN_A
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_A\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 304 1\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 304 1\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 304 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 304 0\nc\n");
     usleep(200 * 1000);
 
     // BTN_B
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d BTN_B\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 305 1\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 305 1\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("k 305 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("k 305 0\nc\n");
     usleep(200 * 1000);
 
     // Directional pad ABS_HAT0Y North
@@ -224,11 +178,9 @@ TestJoystick(VirtualInputReceiver* vir)
         printf("\n\n\n\t%s:%d Directional pad ABS_HAT0Y North\n",
                __func__,
                __LINE__);
-    vir->onJoystickMessage("a 17 -1\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 17 -1\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 17 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 17 0\nc\n");
     usleep(200 * 1000);
 
     // Directional pad ABS_HAT0Y South
@@ -236,11 +188,9 @@ TestJoystick(VirtualInputReceiver* vir)
         printf("\n\n\n\t%s:%d Directional pad ABS_HAT0Y South\n",
                __func__,
                __LINE__);
-    vir->onJoystickMessage("a 17 1\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 17 1\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 17 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 17 0\nc\n");
     usleep(200 * 1000);
 
     // Directional pad ABS_HAT0X West
@@ -248,11 +198,9 @@ TestJoystick(VirtualInputReceiver* vir)
         printf("\n\n\n\t%s:%d Directional pad ABS_HAT0X West\n",
                __func__,
                __LINE__);
-    vir->onJoystickMessage("a 16 -1\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 16 -1\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 16 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 16 0\nc\n");
     usleep(200 * 1000);
 
     // Directional pad ABS_HAT0X East
@@ -260,259 +208,185 @@ TestJoystick(VirtualInputReceiver* vir)
         printf("\n\n\n\t%s:%d Directional pad ABS_HAT0X East\n",
                __func__,
                __LINE__);
-    vir->onJoystickMessage("a 16 1\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 16 1\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 16 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 16 0\nc\n");
     usleep(200 * 1000);
 
     // Right Stick West
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d Right Stick West\n", __func__, __LINE__);
-    vir->onJoystickMessage("a 2 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 0\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 -31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 -31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 -63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 -63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 -95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 -95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 -127\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 -127\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 2 -95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 -95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 -63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 -63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 -31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 -31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 0\nc\n");
     usleep(200 * 1000);
 
     // Right Stick East
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d Right Stick East\n", __func__, __LINE__);
-    vir->onJoystickMessage("a 2 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 0\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 127\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 127\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 2 95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 2 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 2 0\nc\n");
     usleep(200 * 1000);
 
     // Right Stick North
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d Right Stick North\n", __func__, __LINE__);
-    vir->onJoystickMessage("a 5 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 0\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 -31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 -31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 -63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 -63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 -95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 -95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 -127\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 -127\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 5 -95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 -95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 -63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 -63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 -31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 -31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 0\nc\n");
     usleep(200 * 1000);
 
     // Right Stick South
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d Right Stick South\n", __func__, __LINE__);
-    vir->onJoystickMessage("a 5 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 0\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 127\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 127\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 5 95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 5 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 5 0\nc\n");
     usleep(200 * 1000);
 
     // Left Stick West
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d Left Stick West\n", __func__, __LINE__);
-    vir->onJoystickMessage("a 0 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 0\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 -31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 -31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 -63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 -63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 -95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 -95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 -127\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 -127\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 0 -95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 -95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 -63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 -63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 -31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 -31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 0\nc\n");
     usleep(200 * 1000);
 
     // Left Stick East
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d Left Stick East\n", __func__, __LINE__);
-    vir->onJoystickMessage("a 0 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 0\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 127\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 127\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 0 95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 0 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 0 0\nc\n");
     usleep(200 * 1000);
 
     // Left Stick North
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d Left Stick North\n", __func__, __LINE__);
-    vir->onJoystickMessage("a 1 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 0\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 -31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 -31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 -63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 -63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 -95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 -95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 -127\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 -127\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 1 -95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 -95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 -63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 -63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 -31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 -31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 0\nc\n");
     usleep(200 * 1000);
 
     // Left Stick South
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d Left Stick South\n", __func__, __LINE__);
-    vir->onJoystickMessage("a 1 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 0\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 127\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 127\nc\n");
     usleep(200 * 1000);
-    vir->onJoystickMessage("a 1 95\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 95\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 63\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 63\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 31\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 31\nc\n");
     usleep(10000);
-    vir->onJoystickMessage("a 1 0\n");
-    vir->onJoystickMessage("c\n");
+    vir->onJoystickMessage("a 1 0\nc\n");
     usleep(200 * 1000);
 }
 
@@ -523,84 +397,59 @@ TestTouch(VirtualInputReceiver* vir)
     if ((debug & 0x1) > 0)
         printf("\n\n\n\t%s:%d Touch Event\n", __func__, __LINE__);
 
-    vir->onInputMessage("d 0 16384 16384 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("d 0 16384 16384 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 15203 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 15203 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 14022 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 14022 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 13841 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 13841 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 12660 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 12660 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 11479 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 11479 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 10298 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 10298 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 9117 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 9117 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 8936 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 8936 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 7755 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 7755 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 6574 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 6574 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("m 0 16384 5479 200\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("m 0 16384 5479 200\nc\n");
 
     usleep(3 * 1000);
-    vir->onInputMessage("u 0\n");
-    vir->onInputMessage("c\n");
+    vir->onInputMessage("u 0\nc\n");
 }
 
 void
 TestEnableJoystick(VirtualInputReceiver* vir)
 {
     if ((debug & 0x1) > 0)
-        printf("\n\n\n\t%s:%d enable joystick down\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 631 1\n");
-    vir->onJoystickMessage("c\n");
-    usleep(2000);
-    if ((debug & 0x1) > 0)
-        printf("\n\n\n\t%s:%d enable joystick up\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 631 0\n");
-    vir->onJoystickMessage("c\n");
+        printf("\n\n\n\t%s:%d insert joystick\n", __func__, __LINE__);
+    vir->onJoystickMessage("i\n");
 }
 
 void
 TestDisableJoystick(VirtualInputReceiver* vir)
 {
     if ((debug & 0x1) > 0)
-        printf("\n\n\n\t%s:%d disable joystick down\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 632 1\n"); // BTN_TL Down
-    vir->onJoystickMessage("c\n");
-    usleep(2000);
-    if ((debug & 0x1) > 0)
-        printf("\n\n\n\t%s:%d disable joystick up\n", __func__, __LINE__);
-    vir->onJoystickMessage("k 632 0\n"); // BTN_TL Down
-    vir->onJoystickMessage("c\n");
+        printf("\n\n\n\t%s:%d pull out joystick\n", __func__, __LINE__);
+    vir->onJoystickMessage("p\n");
 }
 
 string        short_options  = "c:hi:n:";

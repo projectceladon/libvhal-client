@@ -4,14 +4,16 @@
 #include <inttypes.h>
 #include <string>
 
+namespace vhal {
+namespace client {
 struct TouchInfo
 {
-    int version;
-    int max_contacts;
-    int max_x;
-    int max_y;
-    int max_pressure;
-    int pid;
+    uint32_t version;
+    int      max_contacts;
+    int      max_x;
+    int      max_y;
+    int      max_pressure;
+    int      pid;
 };
 
 enum KEY_STATE_MASK
@@ -29,15 +31,12 @@ enum KEY_STATE_MASK
 struct IInputReceiver
 {
     virtual ~IInputReceiver(){};
-    virtual int  getTouchInfo(TouchInfo* info)               = 0;
-    virtual int  onInputMessage(const std::string& msg)      = 0;
-    virtual int  onKeyCode(uint16_t scanCode, uint32_t mask) = 0;
-    virtual int  onKeyChar(char ch)                          = 0;
-    virtual int  onText(const char* msg)                     = 0;
-    virtual int  onJoystickMessage(const std::string& msg)   = 0;
-    virtual bool joystickEnable()                            = 0;
-    virtual bool joystickDisable()                           = 0;
-    virtual bool getJoystickStatus()                         = 0;
+    virtual int getTouchInfo(TouchInfo* info)               = 0;
+    virtual int onInputMessage(const std::string& msg)      = 0;
+    virtual int onJoystickMessage(const std::string& msg)   = 0;
+    virtual int onKeyCode(uint16_t scanCode, uint32_t mask) = 0;
 };
 
+} // namespace client
+} // namespace vhal
 #endif //__INPUT_RECEIVER_H__

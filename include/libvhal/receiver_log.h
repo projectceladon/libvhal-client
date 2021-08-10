@@ -9,6 +9,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+namespace vhal {
+namespace client {
+
 #ifdef __android__
 #include <android/log.h>
 #endif
@@ -19,7 +22,6 @@
 #define ERROR 4
 
 #ifndef __android__
-#define filename(x) strrchr(x, '/') ? strrchr(x, '/') + 1 : x
 #define AIC_LOG(level, fmt, ...)                                               \
     do {                                                                       \
         if (level > INFO) {                                                    \
@@ -54,4 +56,6 @@
     } while (0)
 #endif
 
+} // namespace client
+} // namespace vhal
 #endif //_RECEIVER_LOG_H

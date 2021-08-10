@@ -1,17 +1,16 @@
 #ifndef _VIRTUAL_INPUT_RECEIVER_H
 #define _VIRTUAL_INPUT_RECEIVER_H
 
+#include "input_receiver.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <linux/input.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <linux/input.h>
-
-#include "input_receiver.h"
+namespace vhal {
+namespace client {
 
 class VirtualInputReceiver : public IInputReceiver
 {
@@ -20,15 +19,10 @@ public:
     virtual ~VirtualInputReceiver();
 
     // IInputReceiver
-    int  getTouchInfo(TouchInfo* info) override;
-    int  onInputMessage(const std::string& msg) override;
-    int  onJoystickMessage(const std::string& msg) override;
-    bool joystickEnable() override;
-    bool joystickDisable() override;
-    bool getJoystickStatus() override;
-    int  onKeyCode(uint16_t scanCode, uint32_t mask) override;
-    int  onKeyChar(char ch) override;
-    int  onText(const char* msg) override;
+    int getTouchInfo(TouchInfo* info) override;
+    int onInputMessage(const std::string& msg) override;
+    int onJoystickMessage(const std::string& msg) override;
+    int onKeyCode(uint16_t scanCode, uint32_t mask) override;
 
 protected:
     // Process one mini-touch command
@@ -54,8 +48,8 @@ private:
         : "./workdir/ipc/input-pipe";
     static const uint32_t kMaxSlot       = 9;
     static const uint32_t kMaxMajor      = 15;
-    static const uint32_t kMaxPositionX  = 1920;
-    static const uint32_t kMaxPositionY  = 1080;
+    static const uint32_t kMaxPositionX  = 32767;
+    static const uint32_t kMaxPositionY  = 32767;
     static const uint32_t kMaxPressure   = 255;
     static const uint32_t kMaxTrackingId = 65535;
 
@@ -70,10 +64,11 @@ private:
 
     int      mFd = -1;
     Contact  mContacts[kMaxSlot];
-    int32_t  mTrackingId     = 0;
-    uint32_t mEnabledSlots   = 0;
-    int      mDebug          = 0;
-    bool     mJoystickStatus = false;
+    int32_t  mTrackingId   = 0;
+    uint32_t mEnabledSlots = 0;
+    int      mDebug        = 0;
 };
 
+} // namespace client
+} // namespace vhal
 #endif //_VIRTUAL_INPUT_RECEIVER_H
