@@ -67,7 +67,7 @@ public:
                     }
                 }
                 // connected ...
-                cout << "Connected to Audio VHal!\n";
+                cout << "Connected to Audio VHal (sink)!\n";
 
                 struct pollfd fds[1];
                 const int     timeout_ms = 1 * 1000; // 1 sec timeout
@@ -86,7 +86,6 @@ public:
                         continue;
                     }
                     if (fds[0].revents & POLLIN) {
-                        cout << "Audio VHal has some message for us!\n";
 
                         CtrlMessage ctrl_msg;
                         auto [received, recv_err_msg] =
