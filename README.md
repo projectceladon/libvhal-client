@@ -96,6 +96,13 @@ video_sink->RegisterCallback([&](const VideoSink::CtrlMessage& ctrl_msg) {
 video_sink->SendDataPacket(inbuf.data(), inbuf_size);
 ```
 
+4. For non-encoded data camera frames always of fixed size example I420
+   in such cases both vhal and libVHAL-client knows the data size exchange
+   in such scenario SendRawPacket will used as below.
+```cpp
+video_sink->SendRawPacket(inbuf.data(), inbuf_size);
+```
+
 Example implementation to interact with libVHAL-client is present in examples/camera_client.cc
 
 ## Audio

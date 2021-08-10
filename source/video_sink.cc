@@ -77,5 +77,10 @@ IOResult VideoSink::SendDataPacket(const uint8_t* packet, size_t size)
     return impl_->SendDataPacket(packet, size);
 }
 
+IOResult VideoSink::SendRawPacket(const uint8_t* packet, size_t size)
+{
+    return impl_->SendRawPacket(packet, size);
+}
+
 }; // namespace client
 } // namespace vhal
