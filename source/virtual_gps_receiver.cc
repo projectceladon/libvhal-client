@@ -46,15 +46,15 @@ ConnectionResult
 VirtualGpsReceiver::Connect()
 {
     std::string error_msg = "";
-    AIC_LOG(DEBUG, "GPS connect VHAL server...");
+    AIC_LOG(LIBVHAL_DEBUG, "GPS connect VHAL server...");
     if (mSockGps >= 0) {
         Disconnect();
     }
 
-    AIC_LOG(DEBUG, "GPS server_ip = %s, port = %d", mIp.c_str(), mPort);
+    AIC_LOG(LIBVHAL_DEBUG, "GPS server_ip = %s, port = %d", mIp.c_str(), mPort);
     mSockGps = socket(AF_INET, SOCK_STREAM, 0);
     if (mSockGps < 0) {
-        AIC_LOG(ERROR, "Can't create GPS socket");
+        AIC_LOG(LIBVHAL_ERROR, "Can't create GPS socket");
         error_msg = std::strerror(errno);
         return { false, error_msg };
     }
@@ -68,7 +68,9 @@ VirtualGpsReceiver::Connect()
     int res =
       connect(mSockGps, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
     if (res < 0) {
-        AIC_LOG(ERROR, "Can't connect to GPS remote, %s", strerror(errno));
+        AIC_LOG(LIBVHAL_ERROR,
+                "Can't connect to GPS remote, %s",
+                strerror(errno));
         error_msg = std::strerror(errno);
         close(mSockGps);
         mSockGps = -1;
@@ -82,14 +84,14 @@ VirtualGpsReceiver::Disconnect()
 {
     std::string error_msg = "";
     if (mSockGps < 0) {
-        AIC_LOG(DEBUG,
+        AIC_LOG(LIBVHAL_DEBUG,
                 "GPS socket is already disconnect. mSockGps = %d mStop = %s",
                 mSockGps,
                 mStop ? "true" : "false");
         return { true, error_msg };
     }
 
-    AIC_LOG(DEBUG,
+    AIC_LOG(LIBVHAL_DEBUG,
             "Shutdown and close GPS socket. mSockGps = %d mStop = %s",
             mSockGps,
             mStop ? "true" : "false");
@@ -119,12 +121,14 @@ VirtualGpsReceiver::Write(const char* buf, size_t len)
             size = write(mSockGps, buf + offset, left);
         } while (size < 0 && errno == EINTR && (--attempt > 0));
         if (size == 0) {
-            AIC_LOG(ERROR, "GPS socket server is closed.");
+            AIC_LOG(LIBVHAL_ERROR, "GPS socket server is closed.");
             error_msg = std::strerror(errno);
             Disconnect();
             return { size, error_msg };
         } else if (size < 0) {
-            AIC_LOG(ERROR, "GPS socket write error: %s", strerror(errno));
+            AIC_LOG(LIBVHAL_ERROR,
+                    "GPS socket write error: %s",
+                    strerror(errno));
             error_msg = std::strerror(errno);
             return { size, error_msg };
         } else {
@@ -149,12 +153,14 @@ VirtualGpsReceiver::Read(uint8_t* buf, size_t len)
             size = read(mSockGps, buf + offset, left);
         } while (size < 0 && errno == EINTR && (--attempt > 0));
         if (size == 0) {
-            AIC_LOG(ERROR, "GPS socket server is closed.");
+            AIC_LOG(LIBVHAL_ERROR, "GPS socket server is closed.");
             error_msg = std::strerror(errno);
             Disconnect();
             return { size, error_msg };
         } else if (size < 0) {
-            AIC_LOG(ERROR, "GPS socket write error: %s", strerror(errno));
+            AIC_LOG(LIBVHAL_ERROR,
+                    "GPS socket write error: %s",
+                    strerror(errno));
             error_msg = std::strerror(errno);
             return { size, error_msg };
         } else if (size > 0) {
@@ -173,7 +179,7 @@ VirtualGpsReceiver::workThreadProc()
         {
             std::unique_lock<std::mutex> lock(mMutex);
             if (mStop) {
-                AIC_LOG(WARNING,
+                AIC_LOG(LIBVHAL_WARNING,
                         "mStop = %s. Break from while.",
                         mStop ? "true" : "false");
                 break;
@@ -181,15 +187,15 @@ VirtualGpsReceiver::workThreadProc()
         }
 
         if (!Connected()) {
-            AIC_LOG(WARNING,
+            AIC_LOG(LIBVHAL_WARNING,
                     "Not connected to GPS server. Need to connect again.");
             IOResult ior = Connect();
             if (!std::get<0>(ior)) {
                 sleep(3);
-                AIC_LOG(ERROR, "Try to connect GPS server again");
+                AIC_LOG(LIBVHAL_ERROR, "Try to connect GPS server again");
                 continue;
             } else {
-                AIC_LOG(DEBUG, "Connected to GPS server.");
+                AIC_LOG(LIBVHAL_DEBUG, "Connected to GPS server.");
             }
         }
 
@@ -198,7 +204,7 @@ VirtualGpsReceiver::workThreadProc()
         IOResult ior = Read(ptr, sizeof(cmd));
         int      res = std::get<0>(ior);
         if (res < 0) {
-            AIC_LOG(WARNING,
+            AIC_LOG(LIBVHAL_WARNING,
                     "%s",
                     mStop ? "mStop = true. Stop"
                           : "Read error, try to connect and read again");
@@ -207,30 +213,32 @@ VirtualGpsReceiver::workThreadProc()
             switch (cmd) {
                 case CMD_QUIT:
                     command = Command::kGpsQuit;
-                    AIC_LOG(DEBUG, "CMD_QUIT");
+                    AIC_LOG(LIBVHAL_DEBUG, "CMD_QUIT");
                     mCmdHandler(static_cast<uint32_t>(command));
                     break;
                 case CMD_START:
                     command = Command::kGpsStart;
-                    AIC_LOG(DEBUG, "GPS_START");
+                    AIC_LOG(LIBVHAL_DEBUG, "GPS_START");
                     mCmdHandler(static_cast<uint32_t>(command));
                     break;
                 case CMD_STOP:
                     command = Command::kGpsStop;
-                    AIC_LOG(DEBUG, "GPS_STOP");
+                    AIC_LOG(LIBVHAL_DEBUG, "GPS_STOP");
                     mCmdHandler(static_cast<uint32_t>(command));
                     break;
 
                 default:
-                    AIC_LOG(ERROR, "GPS unkown command. cmd = %c", cmd);
+                    AIC_LOG(LIBVHAL_ERROR, "GPS unkown command. cmd = %c", cmd);
                     break;
             }
         } else {
-            AIC_LOG(ERROR, "GPS work thread, should not be here, res %d", res);
+            AIC_LOG(LIBVHAL_ERROR,
+                    "GPS work thread, should not be here, res %d",
+                    res);
             break;
         }
     }
-    AIC_LOG(DEBUG, "GPS work thread exit");
+    AIC_LOG(LIBVHAL_DEBUG, "GPS work thread exit");
 }
 
 } // namespace client

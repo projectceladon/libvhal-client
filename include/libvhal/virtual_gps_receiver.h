@@ -1,6 +1,7 @@
 #ifndef __VIRTUAL_GPS_RECEIVER_H__
 #define __VIRTUAL_GPS_RECEIVER_H__
 
+#include "istream_socket_client.h"
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -10,20 +11,6 @@ namespace vhal {
 namespace client {
 
 using CommandHandler = std::function<void(uint32_t cmd)>;
-/**
- * @brief IOResult
- *          { >=0, "" } on Success
- *          see function description for ssize_t value interpretation.
- *          {errno, "error msg"} on Failure
- */
-using IOResult = std::tuple<ssize_t, std::string>;
-
-/**
- * @brief ConnectionResult
- *          { True, "" } on Success
- *          { False, "error msg"} on Failure
- */
-using ConnectionResult = std::tuple<bool, std::string>;
 enum
 {
     CMD_QUIT  = 0,

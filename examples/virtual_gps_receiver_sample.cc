@@ -311,11 +311,11 @@ void
 cmd_handler(uint32_t cmd)
 {
     if (cmd == VirtualGpsReceiver::Command::kGpsQuit) {
-        AIC_LOG(DEBUG,
+        AIC_LOG(LIBVHAL_DEBUG,
                 "Send message: %s",
                 VirtualGpsReceiver::gpsQuitMsg.c_str());
     } else if (cmd == VirtualGpsReceiver::Command::kGpsStart) {
-        AIC_LOG(DEBUG,
+        AIC_LOG(LIBVHAL_DEBUG,
                 "Send message: %s",
                 VirtualGpsReceiver::gpsStartMsg.c_str());
         if (!injection_thread_flag) {
@@ -328,7 +328,7 @@ cmd_handler(uint32_t cmd)
                            NULL);
         }
     } else if (cmd == VirtualGpsReceiver::Command::kGpsStop) {
-        AIC_LOG(DEBUG,
+        AIC_LOG(LIBVHAL_DEBUG,
                 "Send message: %s",
                 VirtualGpsReceiver::gpsStopMsg.c_str());
         if (injection_thread_flag) {
@@ -338,7 +338,7 @@ cmd_handler(uint32_t cmd)
             pthread_join(injection_thread_id, NULL);
         }
     } else {
-        AIC_LOG(DEBUG, "Unknown command.");
+        AIC_LOG(LIBVHAL_DEBUG, "Unknown command.");
     }
 };
 #endif
