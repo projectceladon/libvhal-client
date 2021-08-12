@@ -26,6 +26,7 @@
 #ifndef ISTREAM_SOCKET_CLIENT_H
 #define ISTREAM_SOCKET_CLIENT_H
 
+#include "libvhal_common.h"
 #include <cstdint>
 #include <sys/types.h>
 #include <tuple>
@@ -36,21 +37,6 @@ namespace client {
 /**
  * Below are the return types used by derived class member functions.
  */
-
-/**
- * @brief IOResult
- *          { >=0, "" } on Success
- *          see function description for ssize_t value interpretation.
- *          {errno, "error msg"} on Failure
- */
-using IOResult = std::tuple<ssize_t, std::string>;
-
-/**
- * @brief ConnectionResult
- *          { True, "" } on Success
- *          { False, "error msg"} on Failure
- */
-using ConnectionResult = std::tuple<bool, std::string>;
 
 /**
  * @brief Interface for Stream oriented (connection-oriented) sockets, which

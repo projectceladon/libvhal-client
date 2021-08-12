@@ -26,16 +26,24 @@ namespace client {
  * @brief TCP connection info to the Android instance
  *
  */
-struct TcpConnectionInfo {
+struct TcpConnectionInfo
+{
     // IP Address of the Android instance.
     std::string ip_addr = "";
+    /** \brief The port number of INET socket.
+     *
+     * If port=0, domain (input, audio, camera, etc.) might select port by
+     * default.
+     */
+    uint16_t port = 0;
 };
 
 /**
  * @brief UNIX connection to the Android instance
  *
  */
-struct UnixConnectionInfo {
+struct UnixConnectionInfo
+{
     // Streamer dir path to the Android sockets.
     std::string socket_dir = "";
     // specifies the Instance/Session id of the Android instance, if valid.
@@ -44,13 +52,29 @@ struct UnixConnectionInfo {
 };
 
 /**
-* @brief VSOCK connection to the Android instance
-*
-*/
-struct VsockConnectionInfo {
+ * @brief VSOCK connection to the Android instance
+ *
+ */
+struct VsockConnectionInfo
+{
     // Specifies the Context identifier of the Android VM instance.
     int android_vm_cid = -1;
 };
+
+/**
+ * @brief IOResult
+ *          { >=0, "" } on Success
+ *          see function description for ssize_t value interpretation.
+ *          {errno, "error msg"} on Failure
+ */
+using IOResult = std::tuple<ssize_t, std::string>;
+
+/**
+ * @brief ConnectionResult
+ *          { True, "" } on Success
+ *          { False, "error msg"} on Failure
+ */
+using ConnectionResult = std::tuple<bool, std::string>;
 
 } // namespace client
 } // namespace vhal

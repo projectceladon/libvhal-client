@@ -528,8 +528,10 @@ main(int argc, char* argv[])
                 instance,
                 input);
     }
-    std::string           socket_dir(kDevNameId);
-    VirtualInputReceiver* vir = new VirtualInputReceiver(socket_dir);
+
+    struct UnixConnectionInfo uci;
+    uci.socket_dir            = kDevNameId;
+    VirtualInputReceiver* vir = new VirtualInputReceiver(uci);
     if ((debug & 0x1) > 0)
         printf("\t%s:%d Remote input test:\n", __func__, __LINE__);
 

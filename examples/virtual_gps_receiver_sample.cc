@@ -68,7 +68,7 @@ do_geo_nmea(char* args)
     s[s_len++] = '\n';
 
 #ifdef USE_ANDROID_VIRTUAL_GPS_HAL
-    ior = vgr->Write(s, s_len);
+    ior = vgr->Write((uint8_t*)s, s_len);
     ret = std::get<0>(ior);
     if (ret > 0) {
         printf("Data: %s\n", args);
@@ -225,7 +225,7 @@ do_geo_fix(char* args)
 
 #ifdef USE_ANDROID_VIRTUAL_GPS_HAL
         /* send it, then free */
-        ior = vgr->Write(s, s_len);
+        ior = vgr->Write((uint8_t*)s, s_len);
         ret = std::get<0>(ior);
         if (ret > 0) {
             s[s_len] = '\0';
@@ -404,7 +404,10 @@ main(int argc, char* argv[])
     printf("server_ip = %s port = %d\n", server_ip, port);
 
 #ifdef USE_ANDROID_VIRTUAL_GPS_HAL
-    vgr = std::make_unique<VirtualGpsReceiver>(server_ip, port, cmd_handler);
+    struct TcpConnectionInfo tci;
+    tci.ip_addr = server_ip;
+    vgr         = std::make_unique<VirtualGpsReceiver>(tci);
+    vgr->RegisterCallback(cmd_handler);
 #endif
 
     char str[16];

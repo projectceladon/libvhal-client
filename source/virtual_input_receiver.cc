@@ -4,9 +4,10 @@
 namespace vhal {
 namespace client {
 
-VirtualInputReceiver::VirtualInputReceiver(std::string socket_dir)
+VirtualInputReceiver::VirtualInputReceiver(struct UnixConnectionInfo uci)
+  : mUci(uci)
 {
-    CreateTouchDevice(socket_dir);
+    CreateTouchDevice(uci);
 }
 
 VirtualInputReceiver::~VirtualInputReceiver()
@@ -17,10 +18,10 @@ VirtualInputReceiver::~VirtualInputReceiver()
 }
 
 bool
-VirtualInputReceiver::CreateTouchDevice(std::string socket_dir)
+VirtualInputReceiver::CreateTouchDevice(struct UnixConnectionInfo uci)
 {
     printf("%s:%d Create virtual touch channel\n", __func__, __LINE__);
-    mFd = open(socket_dir.c_str(), O_RDWR | O_NONBLOCK, 0);
+    mFd = open(uci.socket_dir.c_str(), O_RDWR | O_NONBLOCK, 0);
     if (mFd < 0) {
         perror("Failed to open pipe for read error");
         return false;
@@ -28,7 +29,7 @@ VirtualInputReceiver::CreateTouchDevice(std::string socket_dir)
         printf("%s:%d Open %s successfully.\n",
                __func__,
                __LINE__,
-               socket_dir.c_str());
+               uci.socket_dir.c_str());
     }
     return true;
 }
@@ -89,7 +90,7 @@ VirtualInputReceiver::SendDown(int32_t slot,
 }
 
 bool
-VirtualInputReceiver::SendUp(int32_t slot, int32_t x, int32_t y)
+VirtualInputReceiver::SendUp(int32_t slot)
 {
     if (mEnabledSlots == 0 || (uint32_t)slot >= kMaxSlot ||
         !mContacts[slot].enabled) {
@@ -160,10 +161,10 @@ bool
 VirtualInputReceiver::ProcessOneCommand(const std::string& cmd)
 {
     char    type     = 0;
-    int32_t slot     = 0;
-    int32_t x        = 0;
-    int32_t y        = 0;
-    int32_t pressure = 0;
+    int32_t slot     = -1;
+    int32_t x        = -1;
+    int32_t y        = -1;
+    int32_t pressure = -1;
     int32_t ms       = 0;
 
     if (mDebug)
@@ -184,11 +185,28 @@ VirtualInputReceiver::ProcessOneCommand(const std::string& cmd)
                    &x,
                    &y,
                    &pressure);
+            if (slot < 0 || (uint32_t)slot > kMaxSlot || x < 0 ||
+                (uint32_t)x > kMaxPositionX || y < 0 ||
+                (uint32_t)y > kMaxPositionY || pressure < 0 ||
+                (uint32_t)pressure > kMaxPressure) {
+                printf(
+                  "%s: Error: Parameter error. slot=%d x=%d y=%d pressure=%d\n",
+                  __func__,
+                  slot,
+                  x,
+                  y,
+                  pressure);
+                return false;
+            }
             SendDown(slot, x, y, pressure);
             break;
         case 'u': // up
-            sscanf(cmd.c_str(), "%c %d %d %d", &type, &slot, &x, &y);
-            SendUp(slot, x, y);
+            sscanf(cmd.c_str(), "%c %d", &type, &slot);
+            if (slot < 0 || (uint32_t)slot > kMaxSlot) {
+                printf("%s: Error: Parameter error. slot=%d\n", __func__, slot);
+                return false;
+            }
+            SendUp(slot);
             break;
         case 'm': // move
             sscanf(cmd.c_str(),
@@ -198,10 +216,27 @@ VirtualInputReceiver::ProcessOneCommand(const std::string& cmd)
                    &x,
                    &y,
                    &pressure);
+            if (slot < 0 || (uint32_t)slot > kMaxSlot || x < 0 ||
+                (uint32_t)x > kMaxPositionX || y < 0 ||
+                (uint32_t)y > kMaxPositionY || pressure < 0 ||
+                (uint32_t)pressure > kMaxPressure) {
+                printf(
+                  "%s: Error: Parameter error. slot=%d x=%d y=%d pressure=%d\n",
+                  __func__,
+                  slot,
+                  x,
+                  y,
+                  pressure);
+                return false;
+            }
             SendMove(slot, x, y, pressure);
             break;
         case 'w': // wait ms
             sscanf(cmd.c_str(), "%c %d", &type, &ms);
+            if (ms <= 0) {
+                printf("%s: Error: Parameter error. ms=%d\n", __func__, ms);
+                return false;
+            }
             SendWait(ms);
             break;
         default:
@@ -210,11 +245,11 @@ VirtualInputReceiver::ProcessOneCommand(const std::string& cmd)
     return true;
 }
 
-int
+bool
 VirtualInputReceiver::getTouchInfo(TouchInfo* info)
 {
     if (!info) {
-        return -EINVAL;
+        return false;
     }
 
     info->max_contacts = kMaxSlot;
@@ -224,13 +259,15 @@ VirtualInputReceiver::getTouchInfo(TouchInfo* info)
     info->pid          = getpid();
     info->version      = 1;
 
-    return 0;
+    return true;
 }
-int
+
+IOResult
 VirtualInputReceiver::onInputMessage(const std::string& msg)
 {
-    size_t begin = 0;
-    size_t end   = 0;
+    size_t      begin     = 0;
+    size_t      end       = 0;
+    std::string error_msg = "";
 
     while (true) {
         end = msg.find("\n", begin);
@@ -243,14 +280,15 @@ VirtualInputReceiver::onInputMessage(const std::string& msg)
         if (msg[begin] == '\r')
             begin++;
     }
-    return 0;
+    return { 0, error_msg };
 }
 
-int
+IOResult
 VirtualInputReceiver::onJoystickMessage(const std::string& msg)
 {
-    size_t begin = 0;
-    size_t end   = 0;
+    size_t      begin     = 0;
+    size_t      end       = 0;
+    std::string error_msg = "";
 
     while (true) {
         end = msg.find("\n", begin);
@@ -263,7 +301,7 @@ VirtualInputReceiver::onJoystickMessage(const std::string& msg)
         if (msg[begin] == '\r')
             begin++;
     }
-    return 0;
+    return { 0, error_msg };
 }
 
 bool
@@ -348,10 +386,13 @@ VirtualInputReceiver::ProcessOneJoystickCommand(const std::string& cmd)
     return true;
 }
 
-int
+IOResult
 VirtualInputReceiver::onKeyCode(uint16_t scanCode, uint32_t mask)
 {
-    // printf("%s\n", __func__);
+    std::string error_msg = "";
+
+    if (mDebug)
+        printf("%s\n", __func__);
 
     if (mask & KEY_STATE_MASK::Shift) {
         SendEvent(EV_KEY, KEY_LEFTSHIFT, 1);
@@ -383,7 +424,7 @@ VirtualInputReceiver::onKeyCode(uint16_t scanCode, uint32_t mask)
         SendEvent(EV_KEY, KEY_LEFTALT, 0);
         SendCommit();
     }
-    return 0;
+    return { 0, error_msg };
 }
 
 } // namespace client

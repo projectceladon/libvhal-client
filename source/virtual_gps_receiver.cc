@@ -21,10 +21,7 @@ const std::string VirtualGpsReceiver::gpsStartMsg =
 const std::string VirtualGpsReceiver::gpsStopMsg = "{ \"key\" : \"gps-stop\" }";
 const unsigned int VirtualGpsReceiver::mDebug    = 0;
 
-VirtualGpsReceiver::VirtualGpsReceiver(const std::string& ip,
-                                       int                port,
-                                       CommandHandler     ch)
-  : mIp(ip), mPort(port), mCmdHandler(ch)
+VirtualGpsReceiver::VirtualGpsReceiver(struct TcpConnectionInfo tci) : mTci(tci)
 {
     mWorkThread = std::unique_ptr<std::thread>(
       new std::thread(&VirtualGpsReceiver::workThreadProc, this));
@@ -51,7 +48,14 @@ VirtualGpsReceiver::Connect()
         Disconnect();
     }
 
-    AIC_LOG(LIBVHAL_DEBUG, "GPS server_ip = %s, port = %d", mIp.c_str(), mPort);
+    if (mTci.port != 0) {
+        mPort = mTci.port;
+    }
+
+    AIC_LOG(LIBVHAL_DEBUG,
+            "GPS server_ip = %s, port = %d",
+            mTci.ip_addr.c_str(),
+            mPort);
     mSockGps = socket(AF_INET, SOCK_STREAM, 0);
     if (mSockGps < 0) {
         AIC_LOG(LIBVHAL_ERROR, "Can't create GPS socket");
@@ -63,7 +67,7 @@ VirtualGpsReceiver::Connect()
     memset(&addr, 0, sizeof(struct sockaddr_in));
     addr.sin_family = AF_INET;
     addr.sin_port   = htons(mPort);
-    inet_pton(AF_INET, mIp.c_str(), &addr.sin_addr);
+    inet_pton(AF_INET, mTci.ip_addr.c_str(), &addr.sin_addr);
 
     int res =
       connect(mSockGps, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
@@ -108,7 +112,7 @@ VirtualGpsReceiver::Connected()
 }
 
 IOResult
-VirtualGpsReceiver::Write(const char* buf, size_t len)
+VirtualGpsReceiver::Write(const uint8_t* buf, size_t len)
 {
     size_t       offset    = 0;
     size_t       left      = len;
@@ -214,17 +218,26 @@ VirtualGpsReceiver::workThreadProc()
                 case GPS_CMD_QUIT:
                     command = Command::kGpsQuit;
                     AIC_LOG(LIBVHAL_DEBUG, "GPS_CMD_QUIT");
-                    mCmdHandler(static_cast<uint32_t>(command));
+                    if (nullptr != mGpsCmdHandler)
+                        mGpsCmdHandler(static_cast<uint32_t>(command));
+                    else
+                        AIC_LOG(LIBVHAL_WARNING, "mGpsCmdHandler is nullptr");
                     break;
                 case GPS_CMD_START:
                     command = Command::kGpsStart;
                     AIC_LOG(LIBVHAL_DEBUG, "GPS_CMD_START");
-                    mCmdHandler(static_cast<uint32_t>(command));
+                    if (nullptr != mGpsCmdHandler)
+                        mGpsCmdHandler(static_cast<uint32_t>(command));
+                    else
+                        AIC_LOG(LIBVHAL_WARNING, "mGpsCmdHandler is nullptr");
                     break;
                 case GPS_CMD_STOP:
                     command = Command::kGpsStop;
                     AIC_LOG(LIBVHAL_DEBUG, "GPS_CMD_STOP");
-                    mCmdHandler(static_cast<uint32_t>(command));
+                    if (nullptr != mGpsCmdHandler)
+                        mGpsCmdHandler(static_cast<uint32_t>(command));
+                    else
+                        AIC_LOG(LIBVHAL_WARNING, "mGpsCmdHandler is nullptr");
                     break;
 
                 default:
@@ -239,6 +252,13 @@ VirtualGpsReceiver::workThreadProc()
         }
     }
     AIC_LOG(LIBVHAL_DEBUG, "GPS work thread exit");
+}
+
+bool
+VirtualGpsReceiver::RegisterCallback(GpsCommandHandler gch)
+{
+    mGpsCmdHandler = move(gch);
+    return true;
 }
 
 } // namespace client

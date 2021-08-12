@@ -1,7 +1,7 @@
 #ifndef __VIRTUAL_GPS_RECEIVER_H__
 #define __VIRTUAL_GPS_RECEIVER_H__
 
-#include "istream_socket_client.h"
+#include "libvhal_common.h"
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -10,24 +10,85 @@
 namespace vhal {
 namespace client {
 
-using CommandHandler = std::function<void(uint32_t cmd)>;
 enum
 {
-    GPS_CMD_QUIT  = 0,
-    GPS_CMD_START = 1,
-    GPS_CMD_STOP  = 2
+    GPS_CMD_QUIT  = 0, // GPS quit
+    GPS_CMD_START = 1, // GPS start
+    GPS_CMD_STOP  = 2  // GPS stop
 };
+
+/**
+ * @brief GPS command handler.
+ *
+ * @param cmd command is one of {GPS_CMD_QUIT, GPS_CMD_START, GPS_CMD_STOP}.
+ *
+ * @return void
+ */
+using GpsCommandHandler = std::function<void(uint32_t cmd)>;
 
 class VirtualGpsReceiver
 {
 public:
-    VirtualGpsReceiver(const std::string& ip, int port, CommandHandler ch);
+    /**
+     * @brief Constructor.
+     *
+     * @param tci TCP connection information.
+     * @param port Port.
+     *
+     */
+    VirtualGpsReceiver(struct TcpConnectionInfo tci);
     ~VirtualGpsReceiver();
 
+    /**
+     * @brief Connect to remote endpoint.
+     *
+     * @return <true, null-error-msg> connection successful.
+     * @return <false, error-msg> connection failed. Reason for failure is found
+     * in error msg string.
+     */
     ConnectionResult Connect();
+
+    /**
+     * @brief Disconnect to remote endpoint.
+     *
+     * @return <true, null-error-msg> connection successful.
+     * @return <false, error-msg> connection failed. Reason for failure is found
+     * in error msg string.
+     */
     ConnectionResult Disconnect();
-    bool             Connected();
-    IOResult         Write(const char* buf, size_t len);
+
+    /**
+     * @brief Check the status of connect.
+     *
+     * @return true It is connecting.
+     * @return false It is disconnected.
+     */
+    bool Connected();
+
+    /**
+     * @brief Write GPS data to AIC.
+     *
+     * @param buf The pointer to the data. Currently, it only supports Global
+     * Positioning System Fix Data(GPGGA). For more detail, please reference
+     * http://aprs.gids.nl/nmea/#gga.
+     * @param len The length of data.
+     *
+     * @return IOResult
+     *         <Number of bytes sent, Empty string> on Success
+     *         <Error number, Error message on Failure> on Failure
+     */
+    IOResult Write(const uint8_t* buf, size_t len);
+
+    /**
+     * @brief Registers GPS callback.
+     *
+     * @param callback GPS callback function object or lambda or function
+     * pointer.
+     *
+     * @return true GPS callback registered successfully.
+     * @return false GPS callback failed to register.
+     */
+    bool RegisterCallback(GpsCommandHandler gch);
 
 private:
     IOResult Read(uint8_t* buf, size_t len);
@@ -46,10 +107,10 @@ public:
     static const unsigned int mDebug;
 
 private:
-    std::string                  mIp;
-    uint32_t                     mPort;
-    CommandHandler               mCmdHandler;
-    int                          mSockGps = -1;
+    struct TcpConnectionInfo     mTci;
+    uint16_t                     mPort          = 8766;
+    GpsCommandHandler            mGpsCmdHandler = nullptr;
+    int                          mSockGps       = -1;
     static const char*           kGpsSock;
     volatile Command             mCommand;
     std::unique_ptr<std::thread> mWorkThread;

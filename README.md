@@ -68,12 +68,12 @@ libvhal-client$make install
 ## Touch & Joystick
 input-pipe\<x\>-\<y\> are used for touch and joystick. The touch supports fingers number from 1 to 10. The finger id should start from 0 in every session. Sample code is here:
 ```
-examples/VirtualInputReceiverSample.cpp
+examples/virtual_input_receiver_sample.cc
 ```
-### Input Sequence diagram & Pipe data structure Protocol
-![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/virtual_touch_and_input_sequence.jpg)
+### Architecture
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/address-new-comments/docs/touch-joystick-e2e-block-diagram.JPG)
 
-![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/virtual_touch_and_input_api.jpg)
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/address-new-comments/docs/touch-joystick-api-sequence-flow.JPG)
 
 ### Touch Coordinate conversion
 1. On a normal mobile phone tablet, the touch size corresponds to the screen size one by one. For example, the screen is X * Y = 1024 * 600, and the touch size is also x * y = 1024 * 600.
@@ -300,12 +300,12 @@ If customer would develop your own client app in Android OS, the Android framewo
 ## GPS
 Socket is used for GPS. Sample code is here:
 ```
-examples/VirtualGpsReceiverSample.cpp
+examples/virtual_gps_receiver_sample.cc
 ```
-### GPS Sequence diagram & Socket data structure Protocol
-![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/virtual_gps_sequence_diagram.png)
+### Architecture
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/address-new-comments/docs/gps-e2e-block-diagram.JPG)
 
-![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/virtual-touch-joystick-gps/docs/virtual_gps_socket_data_structure_protocol.jpg)
+![image](https://github.com/bing8deng/os.android.bsp.libvhal-client/blob/ref/heads/address-new-comments/docs/gps-api-sequence-flow.JPG)
 
 ### GPS - NMEA sentence information
 Currently, it only supports Global Positioning System Fix Data(GPGGA).

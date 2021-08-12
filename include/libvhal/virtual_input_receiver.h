@@ -15,14 +15,18 @@ namespace client {
 class VirtualInputReceiver : public IInputReceiver
 {
 public:
-    VirtualInputReceiver(std::string socket_dir);
+    /**
+     * @brief Constructor.
+     *
+     * @param uci Unix connection information.
+     */
+    VirtualInputReceiver(struct UnixConnectionInfo uci);
     virtual ~VirtualInputReceiver();
 
-    // IInputReceiver
-    int getTouchInfo(TouchInfo* info) override;
-    int onInputMessage(const std::string& msg) override;
-    int onJoystickMessage(const std::string& msg) override;
-    int onKeyCode(uint16_t scanCode, uint32_t mask) override;
+    bool     getTouchInfo(TouchInfo* info) override;
+    IOResult onInputMessage(const std::string& msg) override;
+    IOResult onJoystickMessage(const std::string& msg) override;
+    IOResult onKeyCode(uint16_t scanCode, uint32_t mask) override;
 
 protected:
     // Process one mini-touch command
@@ -32,23 +36,23 @@ protected:
     uint32_t GetMaxPositionX() { return kMaxPositionX - 1; }
     uint32_t GetMaxPositionY() { return kMaxPositionY - 1; }
 
-    bool CreateTouchDevice(std::string socket_dir);
+    bool CreateTouchDevice(struct UnixConnectionInfo uci);
     bool SendEvent(uint16_t type, uint16_t code, int32_t value);
     bool SendDown(int32_t slot, int32_t x, int32_t y, int32_t pressure);
-    bool SendUp(int32_t slot, int32_t x, int32_t y);
+    bool SendUp(int32_t slot);
     bool SendMove(int32_t slot, int32_t x, int32_t y, int32_t pressure);
     bool SendCommit();
     bool SendReset();
     void SendWait(uint32_t ms);
 
 private:
-    std::string           socketDir;
-    static const uint32_t kMaxSlot       = 9;
-    static const uint32_t kMaxMajor      = 15;
-    static const uint32_t kMaxPositionX  = 32767;
-    static const uint32_t kMaxPositionY  = 32767;
-    static const uint32_t kMaxPressure   = 255;
-    static const uint32_t kMaxTrackingId = 65535;
+    struct UnixConnectionInfo mUci;
+    static const uint32_t     kMaxSlot       = 9;
+    static const uint32_t     kMaxMajor      = 15;
+    static const uint32_t     kMaxPositionX  = 32767;
+    static const uint32_t     kMaxPositionY  = 32767;
+    static const uint32_t     kMaxPressure   = 255;
+    static const uint32_t     kMaxTrackingId = 65535;
 
     struct Contact
     {
