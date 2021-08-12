@@ -10,6 +10,8 @@ list (APPEND SOURCES sensor_interface.cc)
 list (APPEND SOURCES vsock_stream_socket_client.cc)
 list (APPEND SOURCES audio_sink.cc)
 list (APPEND SOURCES audio_source.cc)
+list (APPEND SOURCES virtual_input_receiver.cc)
+list (APPEND SOURCES virtual_gps_receiver.cc)
 
 # Build libvhal-client
 add_library(${PROJECT_NAME} SHARED ${SOURCES})

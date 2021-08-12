@@ -44,6 +44,12 @@ target_link_libraries (audio_record_client LINK_PUBLIC ${PROJECT_NAME})
 add_executable (audio_playback_client audio_playback_client.cc)
 target_link_libraries (audio_playback_client LINK_PUBLIC ${PROJECT_NAME})
 
+add_executable (virtual_input_receiver_sample virtual_input_receiver_sample.cc)
+target_link_libraries (virtual_input_receiver_sample LINK_PUBLIC ${PROJECT_NAME})
+
+add_executable (virtual_gps_receiver_sample virtual_gps_receiver_sample.cc)
+target_link_libraries (virtual_gps_receiver_sample LINK_PUBLIC ${PROJECT_NAME})
+
 install(TARGETS camera_socket_client
                 camera_client
                 sensor_client
