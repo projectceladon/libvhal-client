@@ -15,7 +15,7 @@ namespace client {
 class VirtualInputReceiver : public IInputReceiver
 {
 public:
-    VirtualInputReceiver(int id, int inputId);
+    VirtualInputReceiver(std::string socket_dir);
     virtual ~VirtualInputReceiver();
 
     // IInputReceiver
@@ -32,7 +32,7 @@ protected:
     uint32_t GetMaxPositionX() { return kMaxPositionX - 1; }
     uint32_t GetMaxPositionY() { return kMaxPositionY - 1; }
 
-    bool CreateTouchDevice(int id, int inputId);
+    bool CreateTouchDevice(std::string socket_dir);
     bool SendEvent(uint16_t type, uint16_t code, int32_t value);
     bool SendDown(int32_t slot, int32_t x, int32_t y, int32_t pressure);
     bool SendUp(int32_t slot, int32_t x, int32_t y);
@@ -42,10 +42,7 @@ protected:
     void SendWait(uint32_t ms);
 
 private:
-    const char* kDevName =
-      (getenv("K8S_ENV") != NULL && strcmp(getenv("K8S_ENV"), "true") == 0)
-        ? "/conn/input-pipe"
-        : "./workdir/ipc/input-pipe";
+    std::string           socketDir;
     static const uint32_t kMaxSlot       = 9;
     static const uint32_t kMaxMajor      = 15;
     static const uint32_t kMaxPositionX  = 32767;

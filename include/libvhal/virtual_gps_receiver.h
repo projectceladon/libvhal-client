@@ -13,9 +13,9 @@ namespace client {
 using CommandHandler = std::function<void(uint32_t cmd)>;
 enum
 {
-    CMD_QUIT  = 0,
-    CMD_START = 1,
-    CMD_STOP  = 2
+    GPS_CMD_QUIT  = 0,
+    GPS_CMD_START = 1,
+    GPS_CMD_STOP  = 2
 };
 
 class VirtualGpsReceiver

@@ -515,7 +515,21 @@ main(int argc, char* argv[])
                     printf("Nock: c = %c, index =%d \n", c, index);
         }
     }
-    VirtualInputReceiver* vir = new VirtualInputReceiver(instance, input);
+
+    char kDevNameId[64] = {
+        '\0',
+    };
+    if (getenv("K8S_ENV") != NULL && strcmp(getenv("K8S_ENV"), "true") == 0) {
+        sprintf(kDevNameId, "%s-%d", "/conn/input-pipe", input);
+    } else {
+        sprintf(kDevNameId,
+                "%s%d-%d",
+                "./workdir/ipc/input-pipe",
+                instance,
+                input);
+    }
+    std::string           socket_dir(kDevNameId);
+    VirtualInputReceiver* vir = new VirtualInputReceiver(socket_dir);
     if ((debug & 0x1) > 0)
         printf("\t%s:%d Remote input test:\n", __func__, __LINE__);
 

@@ -211,19 +211,19 @@ VirtualGpsReceiver::workThreadProc()
         } else if (res == sizeof(cmd)) {
             uint32_t command;
             switch (cmd) {
-                case CMD_QUIT:
+                case GPS_CMD_QUIT:
                     command = Command::kGpsQuit;
-                    AIC_LOG(LIBVHAL_DEBUG, "CMD_QUIT");
+                    AIC_LOG(LIBVHAL_DEBUG, "GPS_CMD_QUIT");
                     mCmdHandler(static_cast<uint32_t>(command));
                     break;
-                case CMD_START:
+                case GPS_CMD_START:
                     command = Command::kGpsStart;
-                    AIC_LOG(LIBVHAL_DEBUG, "GPS_START");
+                    AIC_LOG(LIBVHAL_DEBUG, "GPS_CMD_START");
                     mCmdHandler(static_cast<uint32_t>(command));
                     break;
-                case CMD_STOP:
+                case GPS_CMD_STOP:
                     command = Command::kGpsStop;
-                    AIC_LOG(LIBVHAL_DEBUG, "GPS_STOP");
+                    AIC_LOG(LIBVHAL_DEBUG, "GPS_CMD_STOP");
                     mCmdHandler(static_cast<uint32_t>(command));
                     break;
 

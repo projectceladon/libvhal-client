@@ -4,9 +4,9 @@
 namespace vhal {
 namespace client {
 
-VirtualInputReceiver::VirtualInputReceiver(int id, int inputId)
+VirtualInputReceiver::VirtualInputReceiver(std::string socket_dir)
 {
-    CreateTouchDevice(id, inputId);
+    CreateTouchDevice(socket_dir);
 }
 
 VirtualInputReceiver::~VirtualInputReceiver()
@@ -17,23 +17,18 @@ VirtualInputReceiver::~VirtualInputReceiver()
 }
 
 bool
-VirtualInputReceiver::CreateTouchDevice(int id, int inputId)
+VirtualInputReceiver::CreateTouchDevice(std::string socket_dir)
 {
     printf("%s:%d Create virtual touch channel\n", __func__, __LINE__);
-    char kDevNameId[64] = {
-        '\0',
-    };
-    if (getenv("K8S_ENV") != NULL && strcmp(getenv("K8S_ENV"), "true") == 0) {
-        sprintf(kDevNameId, "%s-%d", kDevName, inputId);
-    } else {
-        sprintf(kDevNameId, "%s%d-%d", kDevName, id, inputId);
-    }
-    mFd = open(kDevNameId, O_RDWR | O_NONBLOCK, 0);
+    mFd = open(socket_dir.c_str(), O_RDWR | O_NONBLOCK, 0);
     if (mFd < 0) {
         perror("Failed to open pipe for read error");
         return false;
     } else {
-        printf("%s:%d Open %s successfully.\n", __func__, __LINE__, kDevNameId);
+        printf("%s:%d Open %s successfully.\n",
+               __func__,
+               __LINE__,
+               socket_dir.c_str());
     }
     return true;
 }
