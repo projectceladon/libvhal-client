@@ -104,7 +104,7 @@ public:
                         // success, invoke client callback
                         callback_(cref(ctrl_msg));
                     }
-                } while (true);
+                } while (should_continue_);
             }
         });
     }
