@@ -53,12 +53,6 @@ public:
         server_.svm_cid = android_vm_cid;
         server_.svm_family = AF_VSOCK;
         server_.svm_port = htons(DEFAULT_PORT_CAMERA);
-
-        fd_ = ::socket(AF_VSOCK, SOCK_STREAM, 0);
-        if (fd_ < 0) {
-            throw std::system_error(errno, std::system_category());
-        }
-
     }
     ~Impl() { Close(); }
 
@@ -66,6 +60,13 @@ public:
     {
         std::string error_msg = "";
         std::cout << "cid " << server_.svm_cid << " port " << server_.svm_port;
+        if (fd_ >= 0) {
+            Close();
+        }
+        fd_ = ::socket(AF_VSOCK, SOCK_STREAM, 0);
+        if (fd_ < 0) {
+            throw std::system_error(errno, std::system_category());
+        }
         connected_ = ::connect(fd_, (struct sockaddr*)&server_, sizeof(server_)) == 0;
         if (!connected_) {
             std::cout << "Connect() failed args: fd: " << fd_
@@ -105,10 +106,16 @@ public:
     }
 
 
-    void Close() { close(fd_); }
+    void Close() {
+        connected_ = false;
+        if (fd_ < 0) return;
+        shutdown(fd_, SHUT_RDWR);
+        close(fd_);
+        fd_ = -1;
+    }
 
 private:
-    int  fd_;
+    int  fd_ = -1;
     bool connected_ = false;
     struct sockaddr_vm server_;
 };

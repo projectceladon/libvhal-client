@@ -45,11 +45,6 @@ public:
     {
         remote_.sun_family = AF_UNIX;
         strcpy(remote_.sun_path, remote_server_socket_path.c_str());
-
-        fd_ = ::socket(AF_UNIX, SOCK_STREAM, 0);
-        if (fd_ < 0) {
-            throw std::system_error(errno, std::system_category());
-        }
     }
     ~Impl() { Close(); }
 
@@ -57,7 +52,13 @@ public:
     {
         std::string error_msg = "";
         auto        len = strlen(remote_.sun_path) + sizeof(remote_.sun_family);
-
+        if (fd_ >= 0) {
+            Close();
+        }
+        fd_ = ::socket(AF_UNIX, SOCK_STREAM, 0);
+        if (fd_ < 0) {
+            throw std::system_error(errno, std::system_category());
+        }
         connected_ = ::connect(fd_, (struct sockaddr*)&remote_, len) == 0;
         if (!connected_) {
             std::cout << "Connect() failed args: fd: " << fd_
@@ -97,10 +98,16 @@ public:
         return { received, error_msg };
     }
 
-    void Close() { close(fd_); }
+    void Close() {
+        connected_ = false;
+        if (fd_ < 0) return;
+        shutdown(fd_, SHUT_RDWR);
+        close(fd_);
+        fd_ = -1;
+    }
 
 private:
-    int  fd_;
+    int  fd_ = -1;
     bool connected_ = false;
 
     struct sockaddr_un remote_;

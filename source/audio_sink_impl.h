@@ -60,7 +60,8 @@ public:
                 if (not socket_client_->Connected()) {
                     auto [connected, error_msg] = socket_client_->Connect();
                     if (!connected) {
-                        cout << "Failed to connect to VHal: " << error_msg
+                        cout << "AudioSink Failed to connect to VHal: "
+                             << error_msg
                              << ". Retry after 3ms...\n";
                         this_thread::sleep_for(3ms);
                         continue;
@@ -70,7 +71,6 @@ public:
                 cout << "Connected to Audio VHal (sink)!\n";
 
                 struct pollfd fds[1];
-                const int     timeout_ms = 1 * 1000; // 1 sec timeout
                 int           ret;
 
                 // watch socket for input
@@ -78,7 +78,8 @@ public:
                 fds[0].events = POLLIN;
 
                 do {
-                    ret = poll(fds, std::size(fds), timeout_ms);
+                    // Wait indefinitely for an event.
+                    ret = poll(fds, std::size(fds), -1);
                     if (ret == -1) {
                         throw system_error(errno, system_category());
                     }
@@ -86,7 +87,6 @@ public:
                         continue;
                     }
                     if (fds[0].revents & POLLIN) {
-
                         CtrlMessage ctrl_msg;
                         auto [received, recv_err_msg] =
                             socket_client_->Recv(
@@ -97,11 +97,19 @@ public:
                                  << recv_err_msg
                                  << ", going to disconnect and reconnect.\n";
                             socket_client_->Close();
-                            continue;
-                            // FIXME: What to do ?? Exit ?
+                            break;
                         }
                         // success, invoke client callback
                         callback_(cref(ctrl_msg));
+                    } else {
+                        if (fds[0].revents & (POLLERR|POLLHUP)) {
+                            cout << "AudioSink Poll Fail event: "
+                                << fds[0].revents
+                                << ", reconnect\n";
+                            socket_client_->Close();
+                            break;
+                        }
+                        cout << "AudioSink : Poll revents " << fds[0].revents << "\n";
                     }
                 } while (should_continue_);
             }
