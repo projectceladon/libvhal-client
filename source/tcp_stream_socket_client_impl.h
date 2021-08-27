@@ -68,7 +68,7 @@ public:
         std::string error_msg = "";
         ssize_t left = size;
         while (left > 0 ) {
-            ssize_t received = ::recv(fd_,data, size,0);
+            ssize_t received = ::recv(fd_,data, left,0);
             if (received <= 0) {
                 std::cout << ". Recv() args: fd: " << fd_ << ", data: " << data
                       << ", size: " << size << "\n";
