@@ -71,6 +71,7 @@ public:
                 cout << "Connected to Audio VHal (sink)!\n";
 
                 struct pollfd fds[1];
+                const int     timeout_ms = 1 * 1000; // 1 sec timeout
                 int           ret;
 
                 // watch socket for input
@@ -78,8 +79,7 @@ public:
                 fds[0].events = POLLIN;
 
                 do {
-                    // Wait indefinitely for an event.
-                    ret = poll(fds, std::size(fds), -1);
+                    ret = poll(fds, std::size(fds), timeout_ms);
                     if (ret == -1) {
                         throw system_error(errno, system_category());
                     }
