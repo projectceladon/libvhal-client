@@ -30,6 +30,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <cstring>
 #include <string>
 #include <system_error>
 extern "C"
@@ -165,24 +166,20 @@ public:
                 return {-1, "Sensor Type not supported"};
         }
 
-        int32_t totalPayloadLen = sizeof(vhal_sensor_event_t) -
-                                sizeof(sensor_event.fdata) +
-                                (dataCount * sizeof(float));
-        sensor_event.fdata = new float [dataCount];
+        int32_t dataHeaderLen = sizeof(vhal_sensor_event_t) - sizeof(sensor_event.fdata);
+        int32_t dataPayLoadLen = dataCount * sizeof(float);
+        const int32_t totalPayloadLen = dataHeaderLen + dataPayLoadLen;
         sensor_event.type = event->type;
         sensor_event.fdataCount = dataCount;
         sensor_event.timestamp_ns = event->timestamp_ns;
-        for (int i = 0; i < dataCount; i++)
-            sensor_event.fdata[i] = event->fdata[i];
-
-	if (auto [sent, error_msg] =
-                socket_client_->Send(reinterpret_cast<uint8_t*>(&sensor_event),
-                totalPayloadLen); sent == -1) {
-            delete sensor_event.fdata;
+        uint8_t dataPtr[totalPayloadLen];
+        std::memmove(dataPtr, &sensor_event, dataHeaderLen);
+        std::memmove((dataPtr + dataHeaderLen), event->fdata, dataPayLoadLen);
+        if (auto [sent, error_msg] =
+                socket_client_->Send(dataPtr, totalPayloadLen); sent == -1) {
             return { sent, error_msg };
         }
 
-        delete sensor_event.fdata;
         // success
         return { totalPayloadLen, "" };
     }
