@@ -12,6 +12,7 @@ list (APPEND SOURCES audio_sink.cc)
 list (APPEND SOURCES audio_source.cc)
 list (APPEND SOURCES virtual_input_receiver.cc)
 list (APPEND SOURCES virtual_gps_receiver.cc)
+list (APPEND SOURCES command_channel_interface.cc)
 
 # Build libvhal-client
 add_library(${PROJECT_NAME} SHARED ${SOURCES})

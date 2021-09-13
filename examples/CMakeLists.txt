@@ -50,10 +50,14 @@ target_link_libraries (virtual_input_receiver_sample LINK_PUBLIC ${PROJECT_NAME}
 add_executable (virtual_gps_receiver_sample virtual_gps_receiver_sample.cc)
 target_link_libraries (virtual_gps_receiver_sample LINK_PUBLIC ${PROJECT_NAME})
 
+add_executable (command_channel_client command_channel_client.cc)
+target_link_libraries (command_channel_client LINK_PUBLIC ${PROJECT_NAME})
+
 install(TARGETS camera_socket_client
                 camera_client
                 sensor_client
                 stream
                 audio_record_client
                 audio_playback_client
+                command_channel_client
         DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})
