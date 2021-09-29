@@ -46,16 +46,15 @@ public:
      * @brief protocol ack notification flags
      *
      */
-
     enum CameraAck {
         NACK_CONFIG =0,
         ACK_CONFIG = 1,
     };
+
     /**
      * @brief data transfer control cmd
      *
      */
- 
     enum camera_packet_type_t : uint32_t {
         REQUST_CAPABILITY = 0,
         CAPABILITY = 1,
@@ -69,7 +68,6 @@ public:
      * @size is sizeof(payload). Payload's size depends on the type of the data. See #camera_packet_type_t.
      *
      */
-
     struct camera_header_t
     {
         camera_packet_type_t type;
@@ -110,7 +108,6 @@ public:
      * @brief encapsulated structure to exchange both data and control
      *
      */
- 
     struct camera_packet_t {
         camera_header_t header;
         uint8_t *payload;
@@ -162,6 +159,7 @@ public:
      *
      */
     VideoSink(UnixConnectionInfo unix_conn_info);
+
     /**
      * @brief Construct a default VideoSink object from the Android vm cid.
      *        Throws std::invalid_argument excpetion.
@@ -188,6 +186,14 @@ public:
      * @return false Camera callback failed to register.
      */
     bool RegisterCallback(CameraCallback callback);
+
+    /**
+     * @brief Returns Camera vhal connection status.
+     *
+     * @return true Connected to Camera vhal.
+     * @return false Not Connected to Camera vhal.
+     */
+    bool IsConnected();
 
     /**
      * @brief Send an encoded Camera packet to VHAL.
@@ -233,7 +239,7 @@ public:
      * @return camera_capability_t which provides vhal capabilites
      * @return NULL on failure
      */
-    camera_capability_t* GetCameraCapabilty();
+    std::shared_ptr<camera_capability_t> GetCameraCapabilty();
 
     /**
      * @brief Set Camera Capability.

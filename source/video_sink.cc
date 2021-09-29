@@ -55,7 +55,7 @@ VideoSink::VideoSink(UnixConnectionInfo unix_conn_info)
 VideoSink::VideoSink(VsockConnectionInfo vsock_conn_info)
 {
 
-    if(vsock_conn_info.android_vm_cid == -1) {
+    if (vsock_conn_info.android_vm_cid == -1) {
         throw std::invalid_argument("Please set a valid socket_dir");
     }
     //Creating interface to communicate to VHAL via libvhal
@@ -72,6 +72,12 @@ VideoSink::RegisterCallback(CameraCallback callback)
     return impl_->RegisterCallback(callback);
 }
 
+bool
+VideoSink::IsConnected()
+{
+    return impl_->IsConnected();
+}
+
 IOResult VideoSink::SendDataPacket(const uint8_t* packet, size_t size)
 {
     return impl_->SendDataPacket(packet, size);
@@ -82,7 +88,7 @@ IOResult VideoSink::SendRawPacket(const uint8_t* packet, size_t size)
     return impl_->SendRawPacket(packet, size);
 }
 
-VideoSink::camera_capability_t*
+std::shared_ptr<VideoSink::camera_capability_t>
 VideoSink::GetCameraCapabilty()
 {
     return impl_->GetCameraCapabilty();

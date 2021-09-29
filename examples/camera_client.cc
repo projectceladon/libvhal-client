@@ -145,6 +145,15 @@ main(int argc, char** argv)
         }
     });
 
+    while (!video_sink->IsConnected())
+        this_thread::sleep_for(100ms);
+    cout << "Calling GetCameraCapabilty..\n";
+    video_sink->GetCameraCapabilty();
+    VideoSink::camera_capability_t camera_config;
+    camera_config.codec_type = VideoSink::VideoCodecType::kH264;
+    camera_config.resolution = VideoSink::FrameResolution::k1080p;
+    cout << "Calling SetCameraCapabilty..\n";
+    video_sink->SetCameraCapabilty(&camera_config);
     // we need to be alive :)
     while (true) {
         this_thread::sleep_for(5ms);

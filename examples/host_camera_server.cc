@@ -357,7 +357,7 @@ int main(int argc, char** argv)
 
           switch (ctrl_msg.cmd) {
               case VideoSink::camera_cmd_t::CMD_OPEN:
-	          cout << "Received Open command from Camera VHal\n";
+                  cout << "Received Open command from Camera VHal\n";
                   stop = false;
                   file_src_thread = thread([&stop,
                                             &video_sink,
@@ -403,7 +403,7 @@ int main(int argc, char** argv)
           }
       });
 
-        if(!request_negotiation) {
+        if (!request_negotiation) {
             video_sink->GetCameraCapabilty();
 
             VideoSink::camera_capability_t camera_config;

@@ -349,10 +349,10 @@ video_sink->SendRawPacket(inbuf.data(), inbuf_size);
 ```
 
 5. To read vhal supported capability call GetCameraCapabilty after connection 
-   estabilish. On success, this api will return camera capability of type struct
-   VideoParams
+   estabilish. On success, this api will return a shared_ptr of type struct
+   camera_capability_t
 ```cpp
-VideoParams* GetCameraCapabilty();
+std::shared_ptr<camera_capability_t> GetCameraCapabilty();
 ```
 6. To set libvhal capability to vhal call SetCameraCapabilty
 ```cpp
