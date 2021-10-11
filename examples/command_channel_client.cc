@@ -41,15 +41,11 @@ main(int argc, char** argv)
             case MsgType::kActivityMonitor: {
                 string msg((char*)command_channel_msg.data, command_channel_msg.data_size);
                 cout << "Recevied msg: " << msg << endl;
-                if (command_channel_msg.data != nullptr)
-                    delete [] command_channel_msg.data;
                 break;
             }
             case MsgType::kAicCommand: {
                 string msg((char*)command_channel_msg.data, command_channel_msg.data_size);
                 cout << "Recevied msg: " << msg << endl;
-                if (command_channel_msg.data != nullptr)
-                    delete [] command_channel_msg.data;
                 break;
             }
             default:
@@ -59,22 +55,14 @@ main(int argc, char** argv)
     });
 
     this_thread::sleep_for(1s);
-    cout << "start com.android.settings\n";
-    MsgType message_type = MsgType::kActivityMonitor;
-    string cmd = "0:com.android.settings";
-    IOResult ior = command_channel_interface.SendDataPacket(message_type,
-        reinterpret_cast<const uint8_t*>(cmd.c_str()), cmd.length());
-    int sent = std::get<0>(ior);
-    if (sent < 0) {
-        cout << "Error in writing payload to Command Channel server: "
-             << std::get<1>(ior) << "\n";
-        exit(1);
-    }
-    this_thread::sleep_for(1s);
+    MsgType message_type;
+    string cmd;
+    IOResult ior;
+    int sent;
 
     cout << "start com.android.gallery3d\n";
     message_type = MsgType::kActivityMonitor;
-    cmd = "0:com.android.gallery3d";
+    cmd = "0:com.android.gallery3d:0";
     ior = command_channel_interface.SendDataPacket(message_type,
         reinterpret_cast<const uint8_t*>(cmd.c_str()), cmd.length());
     sent = std::get<0>(ior);
@@ -83,8 +71,9 @@ main(int argc, char** argv)
              << std::get<1>(ior) << "\n";
         exit(1);
     }
-    this_thread::sleep_for(1s);
+    this_thread::sleep_for(3s);
 
+    //Test input
     cout << "input keyevent 4\n";
     message_type = MsgType::kAicCommand;
     cmd = "input keyevent 4";
@@ -96,8 +85,9 @@ main(int argc, char** argv)
              << std::get<1>(ior) << "\n";
         exit(1);
     }
-    this_thread::sleep_for(1s);
+    this_thread::sleep_for(3s);
 
+    //Test pm
     cout << "pm list packages\n";
     message_type = MsgType::kAicCommand;
     cmd = "pm list packages";
@@ -109,10 +99,54 @@ main(int argc, char** argv)
              << std::get<1>(ior) << "\n";
         exit(1);
     }
+    this_thread::sleep_for(3s);
 
-    cout << "start com.android.launcher3\n";
-    message_type = MsgType::kActivityMonitor;
-    cmd = "0:com.android.launcher3";
+    //Test setprop
+    cout << "setprop command_channel_test 3\n";
+    message_type = MsgType::kAicCommand;
+    cmd = "setprop command_channel_test 3";
+    ior = command_channel_interface.SendDataPacket(message_type,
+        reinterpret_cast<const uint8_t*>(cmd.c_str()), cmd.length());
+    sent = std::get<0>(ior);
+    if (sent < 0) {
+        cout << "Error in writing payload to Command Channel server: "
+             << std::get<1>(ior) << "\n";
+        exit(1);
+    }
+    this_thread::sleep_for(3s);
+
+    //Test am
+    cout << "am start com.android.settings\n";
+    message_type = MsgType::kAicCommand;
+    cmd = "am start com.android.settings";
+    ior = command_channel_interface.SendDataPacket(message_type,
+        reinterpret_cast<const uint8_t*>(cmd.c_str()), cmd.length());
+    sent = std::get<0>(ior);
+    if (sent < 0) {
+        cout << "Error in writing payload to Command Channel server: "
+             << std::get<1>(ior) << "\n";
+        exit(1);
+    }
+    this_thread::sleep_for(3s);
+
+    //Test dumpsys
+    cout << "dumpsys SurfaceFlinger\n";
+    message_type = MsgType::kAicCommand;
+    cmd = "dumpsys SurfaceFlinger";
+    ior = command_channel_interface.SendDataPacket(message_type,
+        reinterpret_cast<const uint8_t*>(cmd.c_str()), cmd.length());
+    sent = std::get<0>(ior);
+    if (sent < 0) {
+        cout << "Error in writing payload to Command Channel server: "
+             << std::get<1>(ior) << "\n";
+        exit(1);
+    }
+    this_thread::sleep_for(3s);
+
+    //Test monkey
+    cout << "monkey -p com.android.gallery3d -s 10 10000\n";
+    message_type = MsgType::kAicCommand;
+    cmd = "monkey -p com.android.gallery3d -s 10 10000";
     ior = command_channel_interface.SendDataPacket(message_type,
         reinterpret_cast<const uint8_t*>(cmd.c_str()), cmd.length());
     sent = std::get<0>(ior);

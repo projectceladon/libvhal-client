@@ -100,9 +100,12 @@ public:
                             break;
                         }
 
-                        uint8_t* data = new uint8_t[msg_length];
+                        if (msg_length > ams_client_buf_.size()) {
+                            ams_client_buf_.resize(msg_length);
+                        }
+
                         ior = ams_socket_client_->Recv(
-                            data,
+                            &ams_client_buf_[0],
                             msg_length);
                         received = std::get<0>(ior);
                         if (received != msg_length) {
@@ -114,7 +117,7 @@ public:
                         }
                         // success, invoke client callback
                         command_channel_msg.msg_type = MsgType::kActivityMonitor;
-                        command_channel_msg.data = data;
+                        command_channel_msg.data = &ams_client_buf_[0];
                         command_channel_msg.data_size = msg_length;
                         callback_(cref(command_channel_msg));
                     } else {
@@ -177,9 +180,12 @@ public:
                             break;
                         }
 
-                        uint8_t* data = new uint8_t[msg_length];
+                        if (msg_length > acs_client_buf_.size()) {
+                            acs_client_buf_.resize(msg_length);
+                        }
+
                         ior = acs_socket_client_->Recv(
-                            data,
+                            &acs_client_buf_[0],
                             msg_length);
                         received = std::get<0>(ior);
                         if (received != msg_length) {
@@ -191,7 +197,7 @@ public:
                         }
                         // success, invoke client callback
                         command_channel_msg.msg_type = MsgType::kAicCommand;
-                        command_channel_msg.data = data;
+                        command_channel_msg.data = &acs_client_buf_[0];
                         command_channel_msg.data_size = msg_length;
                         callback_(cref(command_channel_msg));
                     } else {
@@ -261,6 +267,8 @@ private:
     thread                          ams_talker_thread_;
     thread                          acs_talker_thread_;
     atomic<bool>                    should_continue_ = true;
+    std::vector<uint8_t>            ams_client_buf_ = std::vector<uint8_t>(1024);
+    std::vector<uint8_t>            acs_client_buf_ = std::vector<uint8_t>(1024);
 };
 
 } // namespace client
