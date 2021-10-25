@@ -61,8 +61,8 @@ public:
                     if (!connected) {
                         cout << "CommandChannelInterface Failed to connect to Activity Monitor Service: "
                              << error_msg
-                             << ". Retry after 3ms...\n";
-                        this_thread::sleep_for(3ms);
+                             << ". Retry after 1s...\n";
+                        this_thread::sleep_for(1s);
                         continue;
                     }
                 }
@@ -141,8 +141,8 @@ public:
                     if (!connected) {
                         cout << "CommandChannelInterface Failed to connect to Aic Command Service: "
                              << error_msg
-                             << ". Retry after 3ms...\n";
-                        this_thread::sleep_for(3ms);
+                             << ". Retry after 1s...\n";
+                        this_thread::sleep_for(1s);
                         continue;
                     }
                 }
