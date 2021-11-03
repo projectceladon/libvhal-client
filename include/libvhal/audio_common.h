@@ -41,7 +41,9 @@ enum Command
     kOpen  = 0,
     kClose = 1,
     kData  = 2,
-    kNone  = 3
+    kStartstream  = 3,
+    kStopstream = 4,
+    kNone = 5
 };
 
 /**
