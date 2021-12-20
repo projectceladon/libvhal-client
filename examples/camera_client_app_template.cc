@@ -66,9 +66,9 @@ main(int argc, char** argv)
         switch (ctrl_msg.cmd) {
             case VideoSink::Command::kOpen:
                 cout << "Received Open command from Camera VHal\n";
-                auto video_params = ctrl_msg.video_params;
-                auto codec_type   = video_params.codec_type;
-                auto frame_res    = video_params.resolution;
+                auto camera_config = ctrl_msg.camera_config;
+                auto codec_type   = camera_config.codec_type;
+                auto frame_res    = camera_config.resolution;
                 // Request Backend to share camera data
                 // with above video parames: codec type and frame resolution.
 

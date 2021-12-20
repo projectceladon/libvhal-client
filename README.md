@@ -356,7 +356,7 @@ std::shared_ptr<camera_capability_t> GetCameraCapabilty();
 ```
 6. To set libvhal capability to vhal call SetCameraCapabilty
 ```cpp
-bool SetCameraCapabilty(VideoParams *camera_config);;
+bool SetCameraCapabilty(camera_info_t *camera_info);
 ```
 Example implementation to interact with libVHAL-client is present in examples/camera_client.cc
 

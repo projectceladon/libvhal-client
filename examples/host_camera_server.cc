@@ -405,10 +405,10 @@ int main(int argc, char** argv)
         if (!request_negotiation) {
             video_sink->GetCameraCapabilty();
 
-            VideoSink::camera_capability_t camera_config;
-            camera_config.codec_type = VideoSink::VideoCodecType::kI420;
-            camera_config.resolution = VideoSink::FrameResolution::kVGA;
-            video_sink->SetCameraCapabilty(&camera_config);
+            VideoSink::camera_info_t camera_info;
+            camera_info.codec_type = VideoSink::VideoCodecType::kI420;
+            camera_info.resolution = VideoSink::FrameResolution::k480p;
+            video_sink->SetCameraCapabilty(&camera_info);
             request_negotiation = true;
         }
     // we need to be alive :)

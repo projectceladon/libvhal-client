@@ -109,7 +109,6 @@ main(int argc, char** argv)
                                      << "\n";
                                 continue;
                             }
-
                             // Send payload
                             if (auto [sent, error_msg] =
                                   video_sink->SendDataPacket(inbuf.data(), inbuf_size);
@@ -149,11 +148,11 @@ main(int argc, char** argv)
         this_thread::sleep_for(100ms);
     cout << "Calling GetCameraCapabilty..\n";
     video_sink->GetCameraCapabilty();
-    VideoSink::camera_capability_t camera_config;
-    camera_config.codec_type = VideoSink::VideoCodecType::kH264;
-    camera_config.resolution = VideoSink::FrameResolution::k1080p;
+    VideoSink::camera_info_t camera_info;
+    camera_info.codec_type = VideoSink::VideoCodecType::kH264;
+    camera_info.resolution = VideoSink::FrameResolution::k1080p;
     cout << "Calling SetCameraCapabilty..\n";
-    video_sink->SetCameraCapabilty(&camera_config);
+    video_sink->SetCameraCapabilty(&camera_info);
     // we need to be alive :)
     while (true) {
         this_thread::sleep_for(5ms);

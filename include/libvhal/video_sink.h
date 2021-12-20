@@ -60,7 +60,8 @@ public:
         CAPABILITY = 1,
         CAMERA_CONFIG = 2,
         CAMERA_DATA = 3,
-        ACK = 4
+        ACK = 4,
+        CAMERA_INFO = 5,
     };
 
     /**
@@ -71,7 +72,7 @@ public:
     struct camera_header_t
     {
         camera_packet_type_t type;
-        uint32_t size;
+        uint32_t size; // number of cameras * sizeof(camera_info_t)
     };
 
     /**
@@ -89,20 +90,63 @@ public:
      *
      */
     enum FrameResolution : uint32_t {
-        kVGA = 0x01,    // 640x480
+        k480p = 0x01,    // 640x480
         k720p = 0x02,   // 1280x720
         k1080p = 0x04  // 1920x1080
     };
 
     /**
-     * @brief Camera capabilities that needs to be supported by Remote camera.
-     *
+     * Image sensor orientation info
+     */
+    enum SensorOrientation : uint32_t {
+        ORIENTATION_0 = 0,
+        ORIENTATION_90 = 90,
+        ORIENTATION_180 = 180,
+        ORIENTATION_270 = 270
+    };
+
+    /**
+     * Camera facing info
+     */
+    enum CameraFacing : uint32_t {
+        BACK_FACING = 0,
+        FRONT_FACING = 1
+    };
+
+    /**
+     * @brief Camera capabilities of the Android camera vHAL that
+     * needs to be shared with client.
      */
     struct camera_capability_t
     {
-        VideoCodecType  codec_type = VideoCodecType::kH264;
-        FrameResolution resolution = FrameResolution::kVGA;
-        uint32_t        reserved[6];
+        VideoCodecType codec_type = VideoCodecType::kH264;
+        FrameResolution resolution = FrameResolution::k480p;
+        uint32_t maxNumberOfCameras;
+        uint32_t reserved[5];
+    };
+
+    /**
+     * @brief Camera capability info of the remote camera requested to
+     * camera vHAL.
+     */
+    struct camera_info_t {
+        uint32_t cameraId;
+        VideoCodecType codec_type;
+        FrameResolution resolution;
+        SensorOrientation sensorOrientation;
+        CameraFacing facing;  // '0' for back camera and '1' for front camera
+        uint32_t reserved[3];
+    };
+
+    /**
+     * @brief Camera config is used to pass the camera parameters from
+     * camera vHAL to client on every openCamera() call.
+     */
+    struct camera_config_t {
+        uint32_t cameraId;
+        VideoCodecType codec_type;
+        FrameResolution resolution;
+        uint32_t reserved[5];
     };
 
     /**
@@ -129,20 +173,20 @@ public:
      *
      */
     enum camera_version_t {
-        CAMERA_VHAL_VERSION_0 = 0, // decode out of camera vhal
-        CAMERA_VHAL_VERSION_1 = 1, // decode in camera vhal
+        CAMERA_VHAL_VERSION_1 = 0, // decode out of camera vhal
+        CAMERA_VHAL_VERSION_2 = 1, // decode in camera vhal
     };
 
 
     /**
-     * @brief Camera config sent by Camera VHAL to client.
+     * @brief Camera config cmd sent by camera vHAL to client.
      *
      */
     struct camera_config_cmd_t
     {
-        camera_version_t version = camera_version_t::CAMERA_VHAL_VERSION_1;
-        camera_cmd_t     cmd     = camera_cmd_t::CMD_NONE;
-        camera_capability_t video_params;
+        camera_version_t version = camera_version_t::CAMERA_VHAL_VERSION_2;
+        camera_cmd_t cmd = camera_cmd_t::CMD_NONE;
+        camera_config_t camera_config;
     };
 
     /**
@@ -234,15 +278,15 @@ public:
     std::shared_ptr<camera_capability_t> GetCameraCapabilty();
 
     /**
-     * @brief Set Camera Capability.
-     *        api is called to set camera libvhal config to vhal
+     * @brief SetCameraCapability() API is called to set client
+     *        requested capability to camera vHAL
      *
-     * @param camera_capability_t
+     * @param camera_info_t
      *
-     * @return true libvhal able to send camera config
-     * @return false libvhal failed to send camera config
+     * @return true libvhal able to send camera info
+     * @return false libvhal failed to send camera info
      */
-    bool SetCameraCapabilty(camera_capability_t *camera_config);
+    bool SetCameraCapabilty(camera_info_t *camera_info);
 
 private:
     class Impl;

@@ -89,9 +89,9 @@ VideoSink::GetCameraCapabilty()
 }
 
 bool
-VideoSink::SetCameraCapabilty(camera_capability_t *camera_config)
+VideoSink::SetCameraCapabilty(camera_info_t *camera_info)
 {
-    return impl_->SetCameraCapabilty(camera_config);
+    return impl_->SetCameraCapabilty(camera_info);
 }
 }; // namespace client
 } // namespace vhal
