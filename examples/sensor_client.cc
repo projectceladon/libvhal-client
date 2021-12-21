@@ -67,19 +67,16 @@ int main(int argc, char** argv)
 
     /* Create sensor Interface with LibVHAL */
     try {
-        sensorHALIface = make_unique<SensorInterface>(conn_info);
+        sensorHALIface = make_unique<SensorInterface>(conn_info,
+          [&](const SensorInterface::CtrlPacket& ctrlPkt) {
+            std::unique_lock<std::mutex> lck(sensorMapMutex);
+            mSensorMap.insert({ctrlPkt.type, ctrlPkt.enabled});
+        });
     } catch (const std::exception& ex) {
         cout << "Sensors creation error :"
              << ex.what() << endl;
         exit(1);
     }
-
-    /* Register a callback to receive VHAL sensor config packets */
-    sensorHALIface->RegisterCallback([&]
-            (const SensorInterface::CtrlPacket& ctrlPkt) {
-        std::unique_lock<std::mutex> lck(sensorMapMutex);
-        mSensorMap.insert({ctrlPkt.type, ctrlPkt.enabled});
-    });
 
     /* Start a thread to send dummy sensor data for ACCELEROMETER sensor*/
     thread sensor_thread;

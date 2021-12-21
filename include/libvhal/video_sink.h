@@ -157,9 +157,11 @@ public:
      *        Throws std::invalid_argument excpetion.
      *
      * @param unix_conn_info Information needed to connect to the unix vhal socket.
+     * @param callback Camera callback function object or lambda or function
+     * pointer.
      *
      */
-    VideoSink(UnixConnectionInfo unix_conn_info);
+    VideoSink(UnixConnectionInfo unix_conn_info, CameraCallback callback);
 
     /**
      * @brief Construct a default VideoSink object from the Android vm cid.
@@ -169,24 +171,13 @@ public:
      *
      */
 
-    VideoSink(VsockConnectionInfo vsock_conn_info);
+    VideoSink(VsockConnectionInfo vsock_conn_info, CameraCallback callback);
 
     /**
      * @brief Destroy the VideoSink object
      *
      */
     ~VideoSink();
-
-    /**
-     * @brief Registers Camera callback.
-     *
-     * @param callback Camera callback function object or lambda or function
-     * pointer.
-     *
-     * @return true Camera callback registered successfully.
-     * @return false Camera callback failed to register.
-     */
-    bool RegisterCallback(CameraCallback callback);
 
     /**
      * @brief Returns Camera vhal connection status.

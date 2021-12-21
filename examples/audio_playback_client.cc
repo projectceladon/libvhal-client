@@ -41,41 +41,40 @@ main(int argc, char** argv)
     array<uint8_t, inbuf_size> inbuf;
 
     TcpConnectionInfo conn_info = { ip_addr };
-    AudioSource audio_source(conn_info);
-    cout << "Waiting Audio Open callback..\n";
-    audio_source.RegisterCallback([&](const CtrlMessage& ctrl_msg) {
-    switch (ctrl_msg.cmd) {
-    case Command::kOpen:{
-        cout<<"Received Open command from Audio VHal\n";
-        auto sampleRate = ctrl_msg.asci.sample_rate;
-        auto channelNumber = ctrl_msg.asci.channel_count;
-        auto bufferSizeInBytes = ctrl_msg.asci.frame_count *
-                                 channelNumber *
-                                 audio_bytes_per_sample(ctrl_msg.asci.format);
-        break;
-    }
-    case Command::kData:{
-        cout << "Received Data command from VHal\n";
-        if (ctrl_msg.data_size > 0) {
-            auto [size, error_msg] = audio_source.ReadDataPacket(inbuf.data(), ctrl_msg.data_size);
-            if (size < 0) {
-                cout << "Error in writing payload to Audio VHal: "
-                     << error_msg << "\n";
-                exit(1);
-            }
-            cout << "Recieved " << size
-                 << " bytes from Audio VHal.\n";
-          }
-        break;
-     }
-    case Command::kClose:
-        cout << "Received Close command \n";
-        exit(0);
-    default:
-        cout << "Unknown Command received, exiting with failure\n";
-        exit(1);
+    AudioSource audio_source(conn_info, [&](const CtrlMessage& ctrl_msg) {
+        switch (ctrl_msg.cmd) {
+        case Command::kOpen:{
+            cout<<"Received Open command from Audio VHal\n";
+            auto sampleRate = ctrl_msg.asci.sample_rate;
+            auto channelNumber = ctrl_msg.asci.channel_count;
+            auto bufferSizeInBytes = ctrl_msg.asci.frame_count *
+                                     channelNumber *
+                                     audio_bytes_per_sample(ctrl_msg.asci.format);
+            break;
+        }
+        case Command::kData:{
+            cout << "Received Data command from VHal\n";
+            if (ctrl_msg.data_size > 0) {
+                auto [size, error_msg] = audio_source.ReadDataPacket(inbuf.data(), ctrl_msg.data_size);
+                if (size < 0) {
+                    cout << "Error in writing payload to Audio VHal: "
+                         << error_msg << "\n";
+                    exit(1);
+                }
+                cout << "Recieved " << size
+                     << " bytes from Audio VHal.\n";
+              }
+            break;
+        }
+        case Command::kClose:
+            cout << "Received Close command \n";
+            exit(0);
+        default:
+            cout << "Unknown Command received, exiting with failure\n";
+            exit(1);
         }
     });
+    cout << "Waiting Audio Open callback..\n";
     // we need to be alive :)
     while (true) {
         this_thread::sleep_for(5ms);

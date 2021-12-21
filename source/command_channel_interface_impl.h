@@ -50,9 +50,11 @@ class CommandChannelInterface::Impl
 {
 public:
     Impl(unique_ptr<IStreamSocketClient> ams_socket_client,
-         unique_ptr<IStreamSocketClient> acs_socket_client)
+         unique_ptr<IStreamSocketClient> acs_socket_client,
+         CommandChannelCallback callback)
       : ams_socket_client_{ move(ams_socket_client) },
-        acs_socket_client_{ move(acs_socket_client) }
+        acs_socket_client_{ move(acs_socket_client) },
+        callback_{ move(callback) }
     {
         ams_talker_thread_ = thread([this]() {
             while (should_continue_) {
@@ -220,12 +222,6 @@ public:
         should_continue_ = false;
         ams_talker_thread_.join();
         acs_talker_thread_.join();
-    }
-
-    bool RegisterCallback(CommandChannelCallback callback)
-    {
-        callback_ = move(callback);
-        return true;
     }
 
     IOResult SendDataPacket(MsgType msg_type, const uint8_t* message, size_t size)

@@ -33,21 +33,15 @@ namespace vhal {
 namespace client {
 namespace audio {
 
-AudioSource::AudioSource(TcpConnectionInfo tcp_conn_info)
+AudioSource::AudioSource(TcpConnectionInfo tcp_conn_info, AudioCallback callback)
 {
     auto tcp_sock_client =
       std::make_unique<TcpStreamSocketClient>(tcp_conn_info.ip_addr,
       LIBVHAL_AUDIO_PLAYBACK_PORT);
-    impl_ = std::make_unique<Impl>(std::move(tcp_sock_client));
+    impl_ = std::make_unique<Impl>(std::move(tcp_sock_client), callback);
 }
 
 AudioSource::~AudioSource() {}
-
-bool
-AudioSource::RegisterCallback(AudioCallback callback)
-{
-    return impl_->RegisterCallback(callback);
-}
 
 IOResult
 AudioSource::ReadDataPacket(uint8_t* packet, size_t size)

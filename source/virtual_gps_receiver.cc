@@ -21,7 +21,9 @@ const std::string VirtualGpsReceiver::gpsStartMsg =
 const std::string VirtualGpsReceiver::gpsStopMsg = "{ \"key\" : \"gps-stop\" }";
 const unsigned int VirtualGpsReceiver::mDebug    = 0;
 
-VirtualGpsReceiver::VirtualGpsReceiver(struct TcpConnectionInfo tci) : mTci(tci)
+VirtualGpsReceiver::VirtualGpsReceiver(struct TcpConnectionInfo tci, GpsCommandHandler gch) 
+  : mTci(tci),
+    mGpsCmdHandler{ move(gch) }
 {
     mWorkThread = std::unique_ptr<std::thread>(
       new std::thread(&VirtualGpsReceiver::workThreadProc, this));
@@ -252,13 +254,6 @@ VirtualGpsReceiver::workThreadProc()
         }
     }
     AIC_LOG(LIBVHAL_DEBUG, "GPS work thread exit");
-}
-
-bool
-VirtualGpsReceiver::RegisterCallback(GpsCommandHandler gch)
-{
-    mGpsCmdHandler = move(gch);
-    return true;
 }
 
 } // namespace client

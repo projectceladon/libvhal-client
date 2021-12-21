@@ -33,10 +33,11 @@ public:
      * @brief Constructor.
      *
      * @param tci TCP connection information.
-     * @param port Port.
+     * @param callback GPS callback function object or lambda or function
+     * pointer.
      *
      */
-    VirtualGpsReceiver(struct TcpConnectionInfo tci);
+    VirtualGpsReceiver(struct TcpConnectionInfo tci, GpsCommandHandler gch);
     ~VirtualGpsReceiver();
 
     /**
@@ -78,17 +79,6 @@ public:
      *         <Error number, Error message on Failure> on Failure
      */
     IOResult Write(const uint8_t* buf, size_t len);
-
-    /**
-     * @brief Registers GPS callback.
-     *
-     * @param callback GPS callback function object or lambda or function
-     * pointer.
-     *
-     * @return true GPS callback registered successfully.
-     * @return false GPS callback failed to register.
-     */
-    bool RegisterCallback(GpsCommandHandler gch);
 
 private:
     IOResult Read(uint8_t* buf, size_t len);

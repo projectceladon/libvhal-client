@@ -341,7 +341,58 @@ int main(int argc, char** argv)
 
     VsockConnectionInfo conn_info = { instance_id };
     try {
-        video_sink = make_shared<VideoSink>(conn_info);
+        video_sink = make_shared<VideoSink>(conn_info,
+          [&](const VideoSink::camera_config_cmd_t& ctrl_msg) {
+            cout << "received new cmd to process ";
+
+            switch (ctrl_msg.cmd) {
+                case VideoSink::camera_cmd_t::CMD_OPEN:
+                    cout << "Received Open command from Camera VHal\n";
+                    stop = false;
+                    file_src_thread = thread([&stop,
+                                              &video_sink,
+                                              &device_index]() {
+
+                       const size_t inbuf_size = width * height * 1.5;
+                        while (!stop) {
+                            if(av_read_frame(stream_ctx->ifmt_ctx, pkt) < 0)
+                                cout << "Fail to read frame";
+                            yuyv422_to_yuv420sp(pkt->data, buf_list[buf_count % BUF_COUNT], width, height, false);
+                            // Write payload
+                            if (auto [sent, error_msg] =
+                                  video_sink->SendRawPacket(buf_list[buf_count % BUF_COUNT],
+                                                              inbuf_size);
+                                sent < 0) {
+                                cout << "Error in writing payload to Camera VHal: "
+                                  << error_msg << "\n";
+                                exit(1);
+                            }
+    //                        cout << "[rate=30fps] Sent "
+  //                               << " bytes to Camera VHal.\n";
+                            buf_count++;
+                            // sleep for 33ms to maintain 30 fps
+                            this_thread::sleep_for(33ms);
+                        }
+
+                    });
+                    break;
+
+                case VideoSink::camera_cmd_t::CMD_CLOSE:
+                    cout << "Received Close command from Camera VHal\n";
+                    stop = true;
+                    file_src_thread.join();
+                    break;
+
+               case VideoSink::camera_cmd_t::CMD_NONE:
+                    cout << "Received None\n";
+                    break;
+
+                default:
+                    cout << "Unknown Command received, exiting with failure : "  << (int)ctrl_msg.cmd << "\n";
+                    break;
+            }
+        });
+
     } catch (const std::exception& ex) {
         cout << "VideoSink creation error :"
              << ex.what() << endl;
@@ -350,58 +401,6 @@ int main(int argc, char** argv)
 
     cout << "Waiting Camera Open callback..\n" << device_index;
     open_camera();
-
-    video_sink->RegisterCallback(
-      [&](const VideoSink::camera_config_cmd_t& ctrl_msg) {
-          cout << "received new cmd to process ";
-
-          switch (ctrl_msg.cmd) {
-              case VideoSink::camera_cmd_t::CMD_OPEN:
-                  cout << "Received Open command from Camera VHal\n";
-                  stop = false;
-                  file_src_thread = thread([&stop,
-                                            &video_sink,
-                                            &device_index]() {
-
-                     const size_t inbuf_size = width * height * 1.5;
-                      while (!stop) {
-                          if(av_read_frame(stream_ctx->ifmt_ctx, pkt) < 0)
-                              cout << "Fail to read frame";
-                          yuyv422_to_yuv420sp(pkt->data, buf_list[buf_count % BUF_COUNT], width, height, false);
-                          // Write payload
-                          if (auto [sent, error_msg] =
-                                video_sink->SendRawPacket(buf_list[buf_count % BUF_COUNT],
-                                                            inbuf_size);
-                              sent < 0) {
-                              cout << "Error in writing payload to Camera VHal: "
-                                << error_msg << "\n";
-                              exit(1);
-                          }
-  //                        cout << "[rate=30fps] Sent "
-//                               << " bytes to Camera VHal.\n";
-                          buf_count++;
-                          // sleep for 33ms to maintain 30 fps
-                          this_thread::sleep_for(33ms);
-                      }
-
-                  });
-                  break;
-
-              case VideoSink::camera_cmd_t::CMD_CLOSE:
-                  cout << "Received Close command from Camera VHal\n";
-                  stop = true;
-                  file_src_thread.join();
-                  break;
-
-             case VideoSink::camera_cmd_t::CMD_NONE:
-                  cout << "Received None\n";
-                  break;
-
-              default:
-                  cout << "Unknown Command received, exiting with failure : "  << (int)ctrl_msg.cmd << "\n";
-                  break;
-          }
-      });
 
         if (!request_negotiation) {
             video_sink->GetCameraCapabilty();

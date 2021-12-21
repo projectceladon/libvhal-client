@@ -33,7 +33,7 @@
 namespace vhal {
 namespace client {
 
-CommandChannelInterface::CommandChannelInterface(TcpConnectionInfo tcp_conn_info)
+CommandChannelInterface::CommandChannelInterface(TcpConnectionInfo tcp_conn_info, CommandChannelCallback callback)
 {
     auto tcp_sock_activity_monitor_client =
         std::make_unique<TcpStreamSocketClient>(tcp_conn_info.ip_addr,
@@ -42,15 +42,10 @@ CommandChannelInterface::CommandChannelInterface(TcpConnectionInfo tcp_conn_info
         std::make_unique<TcpStreamSocketClient>(tcp_conn_info.ip_addr,
         COMMAND_CHANNEL_AIC_COMMAND_PORT);
     impl_ = std::make_unique<Impl>(std::move(tcp_sock_activity_monitor_client),
-                                   std::move(tcp_sock_aic_command_client));
+                                   std::move(tcp_sock_aic_command_client), callback);
 }
 
 CommandChannelInterface::~CommandChannelInterface() {}
-
-bool CommandChannelInterface::RegisterCallback(CommandChannelCallback callback)
-{
-    return impl_->RegisterCallback(callback);
-}
 
 IOResult CommandChannelInterface::SendDataPacket(MsgType msg_type, const uint8_t* message, size_t size)
 {

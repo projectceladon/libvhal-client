@@ -55,26 +55,17 @@ public:
      *        instance
      *
      * @param tcp_conn_info Information needed to connect to the tcp vhal socket.
+     * @param callback Audio callback function object or lambda function
+     * pointer.
      *
      */
-    AudioSource(TcpConnectionInfo tcp_conn_info);
+    AudioSource(TcpConnectionInfo tcp_conn_info, AudioCallback callback);
 
     /**
      * @brief Destroy the AudioSource object
      *
      */
     ~AudioSource();
-
-    /**
-     * @brief Registers Audio callback.
-     *
-     * @param callback Audio callback function object or lambda function
-     * pointer.
-     *
-     * @return true Audio callback registered successfully.
-     * @return false Audio callback failed to register.
-     */
-    bool RegisterCallback(AudioCallback callback);
 
     /**
      * @brief Read raw pcm audio packet from VHAL.

@@ -33,10 +33,8 @@ main(int argc, char** argv)
     string       ip_addr(argv[1]);
 
     TcpConnectionInfo conn_info = { ip_addr };
-    CommandChannelInterface command_channel_interface(conn_info);
-    cout << "Waiting Command Channel callback..\n";
-
-    command_channel_interface.RegisterCallback([&](const CommandChannelMessage& command_channel_msg) {
+    CommandChannelInterface command_channel_interface(conn_info,
+      [&](const CommandChannelMessage& command_channel_msg) {
         switch (command_channel_msg.msg_type) {
             case MsgType::kActivityMonitor: {
                 string msg((char*)command_channel_msg.data, command_channel_msg.data_size);
@@ -53,6 +51,8 @@ main(int argc, char** argv)
                 exit(1);
         }
     });
+
+    cout << "Waiting Command Channel callback..\n";
 
     this_thread::sleep_for(1s);
     MsgType message_type;

@@ -149,25 +149,16 @@ public:
      *        Throws std::invalid_argument excpetion.
      *
      * @param unix_conn_info Information needed to connect to the unix vhal socket.
+     * @param callback Sensor callback function object or lambda or function
+     * pointer.
      */
-    SensorInterface(UnixConnectionInfo unix_conn_info);
+    SensorInterface(UnixConnectionInfo unix_conn_info, SensorCallback callback);
 
     /**
      * @brief Destroy the SensorInterface object
      *
      */
     ~SensorInterface();
-
-    /**
-     * @brief Registers Sensor callback.
-     *
-     * @param callback Sensor callback function object or lambda or function
-     * pointer.
-     *
-     * @return true Sensor callback registered successfully.
-     * @return false Sensor callback failed to register.
-     */
-    bool RegisterCallback(SensorCallback callback);
 
     /**
      * @brief Send sensor data to VHAL.

@@ -62,10 +62,7 @@ main(int argc, char** argv)
     auto xx_sock_client = make_unique<XXStreamSocketClient>(move(socket_path));
 
     VideoSink video_sink(move(xx_sock_client));
-
-    cout << "Waiting Camera Open callback..\n";
-
-    video_sink.RegisterCallback([&](const VideoSink::CtrlMessage& ctrl_msg) {
+      [&](const VideoSink::CtrlMessage& ctrl_msg) {
         switch (ctrl_msg.cmd) {
             case VideoSink::Command::kOpen:
                 cout << "Received Open command from Camera VHal\n";
@@ -113,6 +110,8 @@ main(int argc, char** argv)
                 exit(1);
         }
     });
+
+    cout << "Waiting Camera Open callback..\n";
 
     // we need to be alive :)
     while (true) {

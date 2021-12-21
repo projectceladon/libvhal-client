@@ -52,8 +52,8 @@ namespace audio {
 class AudioSource::Impl
 {
 public:
-    Impl(unique_ptr<IStreamSocketClient> socket_client)
-      : socket_client_{ move(socket_client) }
+    Impl(unique_ptr<IStreamSocketClient> socket_client, AudioCallback callback)
+      : socket_client_{ move(socket_client) }, callback_{ move(callback) }
     {
         vhal_talker_thread_ = thread([this]() {
             while (should_continue_) {
@@ -122,12 +122,6 @@ public:
     {
         should_continue_ = false;
         vhal_talker_thread_.join();
-    }
-
-    bool RegisterCallback(AudioCallback callback)
-    {
-        callback_ = move(callback);
-        return true;
     }
 
     IOResult ReadDataPacket(uint8_t* buf, size_t len)

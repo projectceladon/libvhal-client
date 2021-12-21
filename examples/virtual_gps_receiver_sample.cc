@@ -406,8 +406,7 @@ main(int argc, char* argv[])
 #ifdef USE_ANDROID_VIRTUAL_GPS_HAL
     struct TcpConnectionInfo tci;
     tci.ip_addr = server_ip;
-    vgr         = std::make_unique<VirtualGpsReceiver>(tci);
-    vgr->RegisterCallback(cmd_handler);
+    vgr         = std::make_unique<VirtualGpsReceiver>(tci, cmd_handler);
 #endif
 
     char str[16];

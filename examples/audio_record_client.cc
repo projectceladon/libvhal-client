@@ -40,10 +40,7 @@ main(int argc, char** argv)
     thread       file_src_thread;
 
     TcpConnectionInfo conn_info = { ip_addr };
-    AudioSink audio_sink(conn_info);
-    cout << "Waiting Audio Open callback..\n";
-
-    audio_sink.RegisterCallback([&](const CtrlMessage& ctrl_msg) {
+    AudioSink audio_sink(conn_info,[&](const CtrlMessage& ctrl_msg) {
         switch (ctrl_msg.cmd) {
             case Command::kOpen: {
                 cout << "Received Open command from Audio VHal\n";
@@ -106,6 +103,7 @@ main(int argc, char** argv)
                 exit(1);
         }
     });
+    cout << "Waiting Audio Open callback..\n";
 
     // we need to be alive :)
     while (true) {

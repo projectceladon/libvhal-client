@@ -34,7 +34,7 @@
 namespace vhal {
 namespace client {
 
-SensorInterface::SensorInterface(UnixConnectionInfo unix_conn_info)
+SensorInterface::SensorInterface(UnixConnectionInfo unix_conn_info, SensorCallback callback)
 {
     auto sockPath = unix_conn_info.socket_dir;
     if (sockPath.length() == 0) {
@@ -49,15 +49,10 @@ SensorInterface::SensorInterface(UnixConnectionInfo unix_conn_info)
     //Creating interface to communicate to VHAL via libvhal
     auto unix_sock_client =
       make_unique<UnixStreamSocketClient>(move(sockPath));
-    impl_ = std::make_unique<Impl>(std::move(unix_sock_client));
+    impl_ = std::make_unique<Impl>(std::move(unix_sock_client), callback);
 }
 
 SensorInterface::~SensorInterface() {}
-
-bool SensorInterface::RegisterCallback(SensorCallback callback)
-{
-    return impl_->RegisterCallback(callback);
-}
 
 IOResult SensorInterface::SendDataPacket(const SensorDataPacket *event)
 {

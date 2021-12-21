@@ -76,28 +76,19 @@ public:
     /**
      * @brief Constructs a new CommandChannelInterface object with the ip
      *        address of android instance
+     * @param callback Command Channel callback function object or lambda
+     * function pointer.
      *
      * @param tcp_conn_info Information needed to connect to the tcp server socket.
      *
      */
-    CommandChannelInterface(TcpConnectionInfo tcp_conn_info);
+    CommandChannelInterface(TcpConnectionInfo tcp_conn_info, CommandChannelCallback callback);
 
     /**
      * @brief Destroy the CommandChannelInterface object
      *
      */
     ~CommandChannelInterface();
-
-    /**
-     * @brief Registers Command Channel callback.
-     *
-     * @param callback Command Channel callback function object or lambda
-     * function pointer.
-     *
-     * @return true Command Channel callback registered successfully.
-     * @return false Command Channel callback failed to register.
-     */
-    bool RegisterCallback(CommandChannelCallback callback);
 
     /**
      * @brief Sends command packet to server.
