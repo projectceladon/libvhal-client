@@ -213,13 +213,13 @@ public:
         return cmd_capability_;
     }
 
-    bool SetCameraCapabilty(camera_info_t *camera_info)
+    bool SetCameraCapabilty(std::vector<camera_info_t> camera_info)
     {
         std::tuple<ssize_t, std::string> response;
         
         camera_header_t header_packet;
         header_packet.type = camera_packet_type_t::CAMERA_INFO;
-        header_packet.size = sizeof(camera_info_t);
+        header_packet.size = camera_info.size() * sizeof(camera_info_t);
 
         response = SendRawPacket((unsigned char*)&header_packet, sizeof(camera_header_t));
         if (get<0>(response) == -1) {
@@ -228,7 +228,8 @@ public:
             return false;
         }
 
-        response = SendRawPacket((unsigned char*)camera_info, sizeof(camera_info_t));
+        response = SendRawPacket((uint8_t *)(camera_info.data()),
+                                 camera_info.size() * sizeof(camera_info_t));
         if (get<0>(response) == -1) {
             get<1>(response) = "Error in sending config to Camera VHal: "
               + get<1>(response);

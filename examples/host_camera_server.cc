@@ -48,6 +48,10 @@ extern "C" {
     #include <libswscale/swscale.h>
     #include <libavutil/imgutils.h>
 }
+
+// Define the number of cameras that needs to supported.
+#define NUM_OF_CAMERAS_REQUESTED 1 // Max would be 2 for now.
+
 using namespace std::chrono_literals;
 using namespace vhal::client;
 using namespace std;
@@ -405,10 +409,13 @@ int main(int argc, char** argv)
         if (!request_negotiation) {
             video_sink->GetCameraCapabilty();
 
-            VideoSink::camera_info_t camera_info;
-            camera_info.codec_type = VideoSink::VideoCodecType::kI420;
-            camera_info.resolution = VideoSink::FrameResolution::k480p;
-            video_sink->SetCameraCapabilty(&camera_info);
+            std::vector<VideoSink::camera_info_t> camera_info(NUM_OF_CAMERAS_REQUESTED);
+
+            for (int i = 0; i < NUM_OF_CAMERAS_REQUESTED; i++) {
+                camera_info[i].codec_type = VideoSink::VideoCodecType::kI420;
+                camera_info[i].resolution = VideoSink::FrameResolution::k480p;
+            }
+            video_sink->SetCameraCapabilty(camera_info);
             request_negotiation = true;
         }
     // we need to be alive :)

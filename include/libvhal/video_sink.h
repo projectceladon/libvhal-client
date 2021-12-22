@@ -286,7 +286,7 @@ public:
      * @return true libvhal able to send camera info
      * @return false libvhal failed to send camera info
      */
-    bool SetCameraCapabilty(camera_info_t *camera_info);
+    bool SetCameraCapabilty(std::vector<camera_info_t> camera_info);
 
 private:
     class Impl;

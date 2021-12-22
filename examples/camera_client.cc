@@ -30,6 +30,9 @@
 #include <string>
 #include <thread>
 
+// Define the number of cameras that needs to supported.
+#define NUM_OF_CAMERAS_REQUESTED 1 // Max would be 2 for now.
+
 using namespace std::chrono_literals;
 using namespace vhal::client;
 using namespace std;
@@ -148,11 +151,15 @@ main(int argc, char** argv)
         this_thread::sleep_for(100ms);
     cout << "Calling GetCameraCapabilty..\n";
     video_sink->GetCameraCapabilty();
-    VideoSink::camera_info_t camera_info;
-    camera_info.codec_type = VideoSink::VideoCodecType::kH264;
-    camera_info.resolution = VideoSink::FrameResolution::k1080p;
+
+    std::vector<VideoSink::camera_info_t> camera_info(NUM_OF_CAMERAS_REQUESTED);
+
+    for (int i = 0; i < NUM_OF_CAMERAS_REQUESTED; i++) {
+        camera_info[i].codec_type = VideoSink::VideoCodecType::kH264;
+        camera_info[i].resolution = VideoSink::FrameResolution::k1080p;
+    }
     cout << "Calling SetCameraCapabilty..\n";
-    video_sink->SetCameraCapabilty(&camera_info);
+    video_sink->SetCameraCapabilty(camera_info);
     // we need to be alive :)
     while (true) {
         this_thread::sleep_for(5ms);

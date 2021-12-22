@@ -89,7 +89,7 @@ VideoSink::GetCameraCapabilty()
 }
 
 bool
-VideoSink::SetCameraCapabilty(camera_info_t *camera_info)
+VideoSink::SetCameraCapabilty(std::vector<camera_info_t> camera_info)
 {
     return impl_->SetCameraCapabilty(camera_info);
 }
