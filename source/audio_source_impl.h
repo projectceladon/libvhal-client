@@ -52,10 +52,10 @@ namespace audio {
 class AudioSource::Impl
 {
 public:
-    Impl(unique_ptr<IStreamSocketClient> socket_client, AudioCallback callback)
+    Impl(unique_ptr<IStreamSocketClient> socket_client, AudioCallback callback, const int32_t user_id)
       : socket_client_{ move(socket_client) }, callback_{ move(callback) }
     {
-        vhal_talker_thread_ = thread([this]() {
+        vhal_talker_thread_ = thread([this, user_id]() {
             while (should_continue_) {
                 if (not socket_client_->Connected()) {
                     auto [connected, error_msg] = socket_client_->Connect();
@@ -68,7 +68,13 @@ public:
                     }
                 }
                 // connected ...
-                cout << "Connected to Audio VHAL (source)!\n";
+                cout << "Connected to Audio VHAL(source), Sending user_id: " << user_id << "\n";
+                if (user_id != -1) {
+                    CtrlMessage ctrl_msg;
+                    ctrl_msg.cmd = Command::kUserId;
+                    ctrl_msg.data = user_id;
+                    SendDataPacket(reinterpret_cast<const uint8_t *>(&ctrl_msg), sizeof(CtrlMessage));
+                }
 
                 struct pollfd fds[1];
                 const int     timeout_ms = 1 * 1000; // 1 sec timeout
@@ -130,6 +136,15 @@ public:
         if (size <= 0) {
             return { -1, error_msg };
         }
+        return { size, "" };
+    }
+
+    IOResult SendDataPacket(const uint8_t* packet, size_t size)
+    {
+        auto [sent, error_msg] = socket_client_->Send(reinterpret_cast<const uint8_t*>(packet), size);
+        if (sent == -1)
+            return { sent, error_msg };
+        // success
         return { size, "" };
     }
 

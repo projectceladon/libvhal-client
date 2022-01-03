@@ -52,10 +52,10 @@ namespace audio {
 class AudioSink::Impl
 {
 public:
-    Impl(unique_ptr<IStreamSocketClient> socket_client, AudioCallback callback)
+    Impl(unique_ptr<IStreamSocketClient> socket_client, AudioCallback callback, const int32_t user_id)
       : socket_client_{ move(socket_client) }, callback_{ move(callback) }
     {
-        vhal_talker_thread_ = thread([this]() {
+        vhal_talker_thread_ = thread([this, user_id]() {
             while (should_continue_) {
                 if (not socket_client_->Connected()) {
                     auto [connected, error_msg] = socket_client_->Connect();
@@ -68,7 +68,13 @@ public:
                     }
                 }
                 // connected ...
-                cout << "Connected to Audio VHal (sink)!\n";
+                cout << "Connected to Audio VHal(sink), Sending user_id: " << user_id << "\n";
+                if (user_id != -1) {
+                    CtrlMessage ctrl_msg;
+                    ctrl_msg.cmd = Command::kUserId;
+                    ctrl_msg.data = user_id;
+                    SendDataPacket(reinterpret_cast<const uint8_t *>(&ctrl_msg), sizeof(CtrlMessage));
+                }
 
                 struct pollfd fds[1];
                 const int     timeout_ms = 1 * 1000; // 1 sec timeout

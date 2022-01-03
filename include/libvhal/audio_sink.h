@@ -50,9 +50,10 @@ public:
      * @param tcp_conn_info Information needed to connect to the tcp vhal socket.
      * @param callback Audio callback function object or lambda function
      * pointer.
+     * @param user_id Optional parameter to specify the user# in multi-user config.
      *
      */
-    AudioSink(TcpConnectionInfo tcp_conn_info, AudioCallback callback);
+    AudioSink(TcpConnectionInfo tcp_conn_info, AudioCallback callback, const int32_t user_id = -1);
 
     /**
      * @brief Destroy the AudioSink object

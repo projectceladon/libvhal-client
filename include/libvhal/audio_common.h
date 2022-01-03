@@ -43,7 +43,8 @@ enum Command
     kData  = 2,
     kStartstream  = 3,
     kStopstream = 4,
-    kNone = 5
+    kUserId = 5,
+    kNone = 6
 };
 
 /**
@@ -56,6 +57,7 @@ struct CtrlMessage
     union {
         struct audio_socket_configuration_info asci;
         uint32_t data_size;
+        uint32_t data;
     };
 };
 

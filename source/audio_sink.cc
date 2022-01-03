@@ -33,12 +33,12 @@ namespace vhal {
 namespace client {
 namespace audio {
 
-AudioSink::AudioSink(TcpConnectionInfo tcp_conn_info, AudioCallback callback)
+AudioSink::AudioSink(TcpConnectionInfo tcp_conn_info, AudioCallback callback, const int32_t user_id)
 {
     auto tcp_sock_client =
       std::make_unique<TcpStreamSocketClient>(tcp_conn_info.ip_addr,
       LIBVHAL_AUDIO_RECORD_PORT);
-    impl_ = std::make_unique<Impl>(std::move(tcp_sock_client), callback);
+    impl_ = std::make_unique<Impl>(std::move(tcp_sock_client), callback, user_id);
 }
 
 AudioSink::~AudioSink() {}
