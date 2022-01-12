@@ -80,6 +80,7 @@ public:
      */
     enum VideoCodecType : uint32_t {
         kH264 = 0x01,
+        kH265 = 0x02,
         kI420 = 0x04
     };
 
