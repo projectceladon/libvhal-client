@@ -51,11 +51,12 @@ namespace client {
 class SensorInterface::Impl
 {
 public:
-    Impl(unique_ptr<IStreamSocketClient> socket_client, SensorCallback callback)
+    Impl(unique_ptr<IStreamSocketClient> socket_client, SensorCallback callback,
+                                                        const int32_t user_id)
       : socket_client_{ move(socket_client) },
         callback_{ move(callback) }
     {
-        vhal_talker_thread_ = thread([this]() {
+        vhal_talker_thread_ = thread([this, user_id]() {
             while (should_continue_) {
                 if (not socket_client_->Connected()) {
                     if (auto [connected, error_msg] = socket_client_->Connect();
@@ -69,6 +70,7 @@ public:
                 }
                 // connected ...
                 cout << "Connected to Sensor VHal!\n";
+                sendStreamerUserId(user_id);
 
                 struct pollfd fds[1];
                 const int     timeout_ms = 1 * 1000; // 1 sec timeout
@@ -214,6 +216,21 @@ private:
     unique_ptr<IStreamSocketClient> socket_client_;
     thread                          vhal_talker_thread_;
     atomic<bool>                    should_continue_ = true;
+
+    void sendStreamerUserId(int32_t user_id) {
+        if (not socket_client_->Connected())
+            return;
+
+        if (user_id >= 0) {
+            vhal_sensor_event_t sensor_event;
+            sensor_event.type = SENSOR_TYPE_ADDITIONAL_INFO;
+            sensor_event.userId = user_id;
+            const int32_t dataLen = sizeof(vhal_sensor_event_t) - sizeof(sensor_event.fdata);
+            uint8_t dataPtr[dataLen];
+            std::memmove(dataPtr, &sensor_event, dataLen);
+            socket_client_->Send(dataPtr, dataLen);
+        }
+    }
 };
 
 } // namespace client

@@ -87,7 +87,10 @@ enum sensor_type_t {
  */
 struct vhal_sensor_event_t {
     sensor_type_t type;  //sensor type
-    int32_t fdataCount; //Number of data fields(fdata).
+    union {
+        int32_t userId; //User Id for multiclient use case
+        int32_t fdataCount; //Number of data fields(fdata).
+    };
     int64_t timestamp_ns; //time is in nanoseconds
     float *fdata; //Sensor data
 };
@@ -150,9 +153,11 @@ public:
      *
      * @param unix_conn_info Information needed to connect to the unix vhal socket.
      * @param callback Sensor callback function object or lambda or function
+     * @param userId valid id >=0  for multi-client use case
      * pointer.
      */
-    SensorInterface(UnixConnectionInfo unix_conn_info, SensorCallback callback);
+    SensorInterface(UnixConnectionInfo unix_conn_info, SensorCallback callback,
+                                                        const int32_t userId);
 
     /**
      * @brief Destroy the SensorInterface object
@@ -186,6 +191,7 @@ public:
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;
+    void sendStreamerUserId(int32_t user_id);
 };
 } // namespace client
 } // namespace vhal
