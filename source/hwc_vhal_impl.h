@@ -1,0 +1,425 @@
+#ifndef HWC_VHAL_IMPL_H
+#define HWC_VHAL_IMPL_H
+#include <atomic>
+#include <string>
+#include <functional>
+#include <memory>
+#include <map>
+#include <iostream>
+#include <thread>
+#include "libvhal_common.h"
+#include "hwc_vhal.h"
+#include "istream_socket_client.h"
+
+#include "display-protocol.h"
+using namespace std;
+
+namespace vhal {
+namespace client {
+
+class VirtualHwcReceiver::Impl
+{
+public:
+    Impl(unique_ptr<IStreamSocketClient> unix_sock_client, ConfigInfo info, HwcHandler handler): socket_client_{move(unix_sock_client)}, mInfo{move(info)}, mHwcHandler{move(handler)}
+    {
+        AIC_LOG(mDebug, "info.video_res_width: %d", info.video_res_width);
+        AIC_LOG(mDebug, "info.video_res_height: %d", info.video_res_height);
+        AIC_LOG(mDebug, "info.video_device: %s", info.video_device.c_str());
+        AIC_LOG(mDebug, "info.user_id: %d", info.user_id);
+        AIC_LOG(mDebug, "info.unix_conn_info.socket_dir: %s", info.unix_conn_info.socket_dir.c_str());
+        AIC_LOG(mDebug, "info.unix_conn_info.android_instance_id: %d", info.unix_conn_info.android_instance_id);
+    }
+
+    ~Impl()
+    {
+        if (should_continue_) {
+            stop();
+	}
+    }
+
+    cros_gralloc_handle_t get_handle(uint64_t h)
+    {
+        try {
+	    cros_gralloc_handle_t handle = mHandles.at(h);
+	    if (!handle) {
+	        AIC_LOG(mDebug, "broken handle: %ld\n", h);
+	    }
+	    return handle;
+	} catch(...) {
+	    AIC_LOG(mDebug, "remote handle not found: %ld\n", h);
+	    return nullptr;
+        }
+    }
+
+    int recvFds(int fd, int* pfd, size_t fdlen)
+    {
+        int ret = 0;
+        int count = 0;
+        int i = 0;
+        struct msghdr msg;
+        int rdata[4] = {0};
+        struct iovec vec;
+        char cmsgbuf[CMSG_SPACE(fdlen * sizeof(int))];
+        struct cmsghdr* p_cmsg;
+        int* p_fds;
+
+        vec.iov_base = rdata;
+        vec.iov_len = 16;
+        msg.msg_name = NULL;
+        msg.msg_namelen = 0;
+        msg.msg_iov = &vec;
+        msg.msg_iovlen = 1;
+        msg.msg_control = cmsgbuf;
+        msg.msg_controllen = sizeof(cmsgbuf);
+        msg.msg_flags = 0;
+
+        p_fds = (int*)CMSG_DATA(CMSG_FIRSTHDR(&msg));
+        *p_fds = -1;
+        count = recvmsg(fd, &msg, MSG_WAITALL);
+        if (count < 0) {
+            printf("Failed to recv fd from remote\n");
+            ret = -1;
+        } else {
+            p_cmsg = CMSG_FIRSTHDR(&msg);
+            if (p_cmsg == NULL) {
+                printf("No msg hdr\n");
+                ret = -1;
+            } else {
+                p_fds = (int*)CMSG_DATA(p_cmsg);
+                for (i = 0; i < (int)fdlen; i++) {
+                    pfd[i] = p_fds[i];
+               }
+            }
+        }
+        return ret;
+    }
+
+    bool init()
+    {
+        if ((mInfo.video_res_width <= 0) || (mInfo.video_res_height <=0)) {
+            AIC_LOG(mDebug, "%s", "video width/height not set\n");
+            return false;
+        }
+
+        if (mInfo.video_device.empty()) {
+            AIC_LOG(mDebug, "%s", "video device not specified\n");
+            return false;
+        }
+
+        const size_t pos = mInfo.video_device.find_last_of('D');
+        if (pos == std::string::npos) {
+            AIC_LOG(mDebug, "wrong video device: %s\n", mInfo.video_device.c_str());
+            return false;
+        }
+
+        const auto randerNodeStr = mInfo.video_device.substr(pos + 1);
+        renderNode = std::stoi(randerNodeStr);
+        return true;
+    }
+    IOResult start()
+    {
+        std::string error_msg = "";
+
+        if (should_continue_ == true) {
+            error_msg = "ERROR: Already started!";
+            return {-1, error_msg};
+        }
+
+        should_continue_ = true;
+        mWorkThread = std::unique_ptr<std::thread>(new std::thread(&Impl::workThreadProc, this));
+        AIC_LOG(mDebug, "start is: %s", "successful!");
+        return {0, error_msg};
+    }
+    IOResult stop()
+    {
+        std::string error_msg = "";
+        if (should_continue_ == false) {
+            error_msg = "ERROR: it's not started, please start firstly!";
+	    return {-1, error_msg};
+        }
+
+        should_continue_ = false;
+        mWorkThread->join();
+        socket_client_->Close();
+        AIC_LOG(mDebug, "stop is: %s", "successful!");
+        return {0, error_msg};
+    }
+    IOResult setMode(int width, int height)
+    {
+        std::string error_msg = "";
+        if (should_continue_ == false) {
+            error_msg = "ERROR: it's not started, please start firstly!";
+            return {-1, error_msg};
+        }
+        display_info_event_t ev;
+
+        memset(&ev, 0, sizeof(ev));
+        ev.event.type = VHAL_DD_EVENT_SETUP_RESOLUTION;
+        ev.event.size = sizeof(ev);
+
+        ev.info.flags = 1;
+        ev.info.width = width;
+        ev.info.height = height;
+        ssize_t len = 0;
+        len = send(socket_client_->GetNativeSocketFd(), &ev, sizeof(ev), 0);
+        if (len <= 0) {
+            error_msg = std::strerror(errno);
+            return {-1, error_msg};
+        }
+        return {0, error_msg};
+    }
+
+    void workThreadProc()
+    {
+        while (should_continue_) {
+            while ((not socket_client_->Connected()) && (should_continue_)) {
+                if (auto [connected, error_msg] = socket_client_->Connect();
+                    !connected) {
+                    cout << "Failed to connect to VHal: "
+                         << error_msg
+                         << ". Retry after 1s...\n";
+                    this_thread::sleep_for(1s);
+                    continue;
+                }
+                cout << "Connected to HWC VHal!\n";
+            }
+
+            struct pollfd fds[1];
+            const int     timeout_ms = 1 * 1000; // 1 sec timeout
+            int           ret;
+
+            // watch socket for input
+            fds[0].fd     = socket_client_->GetNativeSocketFd();
+            fds[0].events = POLLIN;
+            // connected ...
+
+	    ret = poll(fds, std::size(fds), timeout_ms);
+	    if (ret <= 0) {
+	        socket_client_->Close();
+		continue; //this will goto Connect();
+	    } else {
+                display_event_t ev{};
+                ssize_t len = read(socket_client_->GetNativeSocketFd(), &ev, sizeof(ev));
+                if (len < 0) {
+                    AIC_LOG(mDebug, "can't receive data: %s\n", strerror(errno));
+                    break;
+                } else if (len == 0) {
+                    AIC_LOG(mDebug, "client disconnected: %s\n", strerror(errno));
+                    break;
+                } else {
+                    switch (ev.type) {
+                        case VHAL_DD_EVENT_DISPINFO_REQ:
+                          if (checkDispConfig(ev.id, ev.renderNode) == -1) {
+                            goto error;
+                          }
+                          AIC_LOG(mDebug, "VHAL_DD_EVENT_DISPINFO_REQ\n");
+                          UpdateDispConfig(socket_client_->GetNativeSocketFd());
+                          break;
+                        case VHAL_DD_EVENT_DISPPORT_REQ:
+                          AIC_LOG(mDebug, "VHAL_DD_EVENT_DISPPORT_REQ\n");
+                          UpdateDispPort(socket_client_->GetNativeSocketFd());
+                          break;
+                        case VHAL_DD_EVENT_CREATE_BUFFER:
+                          AIC_LOG(mDebug, "VHAL_DD_EVENT_CREATE_BUFFER\n");
+                          CreateBuffer(socket_client_->GetNativeSocketFd(), ev.size);
+                          break;
+                        case VHAL_DD_EVENT_REMOVE_BUFFER:
+                          AIC_LOG(mDebug, "VHAL_DD_EVENT_REMOVE_BUFFER\n");
+                          RemoveBuffer(socket_client_->GetNativeSocketFd());
+                          break;
+                        case VHAL_DD_EVENT_DISPLAY_REQ:
+                          //AIC_LOG(mDebug, "VHAL_DD_EVENT_DISPLAY_REQ\n");
+                          DisplayRequest(socket_client_->GetNativeSocketFd());
+                          break;
+                        default:
+                          AIC_LOG(mDebug, "VHAL_DD_EVENT_<unknown>: ev.type=%d\n", ev.type);
+                          break;
+                    } // end of switch
+                } //end of else
+            }
+        } // end of while
+
+        error:
+            socket_client_->Close();
+            AIC_LOG(mDebug, "working thread stopped, please re-start() !!!");
+
+        return;
+    }
+
+    int checkDispConfig(int aicSession, int aicRenderNodeMinus128) {
+        if (mInfo.unix_conn_info.android_instance_id < 0) {
+	    //for K8S case
+	    return 0;
+	}
+        const int aicRenderNode = aicRenderNodeMinus128 + 128;
+        if (renderNode == -1 || renderNode != aicRenderNode) {
+            AIC_LOG(mDebug, "wrong renderNode. AIC renderNode=%d, expected renderNode=%d\n", aicRenderNode, renderNode);
+	    return -1;
+	}
+
+	if (mInfo.unix_conn_info.android_instance_id != aicSession) {
+	    AIC_LOG(mDebug, "unmatched AIC session ID. AIC id=%d, expected id=%d\n", aicSession, mInfo.unix_conn_info.android_instance_id);
+	    return -1;
+	}
+	AIC_LOG(mDebug, "current AIC ID=%d\n", mInfo.unix_conn_info.android_instance_id);
+	AIC_LOG(mDebug, "current renderNode=%d\n", renderNode);
+	return 0;
+    }
+
+    void UpdateDispConfig(int fd)
+    {
+        display_info_event_t ev{};
+
+        ev.event.type = VHAL_DD_EVENT_DISPINFO_ACK;
+        ev.event.size = sizeof(ev);
+
+        ev.info.flags = 1;
+        ev.info.width = mInfo.video_res_width;
+        ev.info.height = mInfo.video_res_height;
+        ev.info.stride = ev.info.width;
+        ev.info.format = 5;
+        ev.info.xdpi = 240;
+        ev.info.ydpi = 240;
+        ev.info.fps = 60;
+        ev.info.minSwapInterval = 1;
+        ev.info.maxSwapInterval = 1;
+        ev.info.numFramebuffers = 2;
+
+        ssize_t len = 0;
+        len = send(fd, &ev, sizeof(ev), 0);
+        if (len <= 0) {
+            AIC_LOG(mDebug, "send() failed: %s\n", strerror(errno));
+        }
+    }
+
+    void UpdateDispPort(int fd) {
+      display_port_event_t ev{};
+
+      ev.event.type = VHAL_DD_EVENT_DISPPORT_ACK;
+      ev.event.size = sizeof(ev);
+      ev.dispPort.port = mInfo.user_id;
+
+      ssize_t len = 0;
+      send(fd, &ev, sizeof(ev), 0);
+      if (len <= 0) {
+          AIC_LOG(mDebug, "send() failed: %s\n", strerror(errno));
+      }
+    }
+
+    /* msg has 2 parts: header and body
+     *
+     * header:
+     * 1) display_event_t::type, create/remove/display
+     * 2) display_event_t::size, total size
+     * 3) buffer_info_t::remote_handle, buffer handle
+     *
+     * body: cros_gralloc_handle_t
+     */
+    int CreateBuffer(int fd, int size)
+    {
+        buffer_info_event_t ev{};
+        ssize_t len = 0;
+        int ret = -1;
+
+        if ((uint32_t)size < sizeof(ev) || size - sizeof(ev) < sizeof(cros_gralloc_handle_t)) {
+            AIC_LOG(mDebug, "Wrong buffer size  %d to recv\n", size);
+            return -1;
+        }
+
+        auto handle = (cros_gralloc_handle_t)malloc(size - sizeof(ev));
+        if (handle == nullptr) {
+            AIC_LOG(mDebug, "Failed to allocate local buffer handle: %s\n", strerror(errno));
+            ret = -errno;
+            return ret;
+        }
+
+        len = recv(fd, &ev.info, sizeof(ev.info), 0);
+        if (len <= 0) {
+            free(handle);
+            AIC_LOG(mDebug, "Failed to read buffer info: %s\n", strerror(errno));
+            return -1;
+        }
+
+        len = recv(fd, handle, size - sizeof(ev), 0);
+        if (len <= 0) {
+            free(handle);
+            AIC_LOG(mDebug, "Failed to read buffer info: %s\n", strerror(errno));
+            return -1;
+        }
+        if (recvFds(fd, handle->fds, handle->base.numFds) == -1) {
+            free(handle);
+            return -1;
+        }
+        AIC_LOG(mDebug, "createBuffer width(%d)height(%d)\n", handle->width, handle->height);
+        mHandles.insert(std::make_pair(ev.info.remote_handle, handle));
+        mHwcHandler(FRAME_CREATE, handle);
+
+        return 0;
+    }
+
+    int RemoveBuffer(int fd)
+    {
+        buffer_info_event_t ev{};
+        ssize_t len = 0;
+
+        len = recv(fd, &ev.info, sizeof(ev.info), 0);
+        if (len <= 0) {
+            AIC_LOG(mDebug, "Failed to read buffer info: %s\n", strerror(errno));
+            return -1;
+        }
+
+        cros_gralloc_handle_t handle = get_handle(ev.info.remote_handle);
+        if (!handle) {
+            return -1;
+        }
+        mHwcHandler(FRAME_REMOVE, handle);
+        close(handle->fds[0]);
+        free(handle);
+
+        mHandles.erase(ev.info.remote_handle);
+
+        return 0;
+    }
+
+    int DisplayRequest(int fd) {
+        buffer_info_event_t ev{};
+        ssize_t len = 0;
+        len = recv(fd, &ev.info, sizeof(ev.info), 0);
+        if (len <= 0) {
+            AIC_LOG(mDebug, "Failed to read buffer info: %s\n", strerror(errno));
+            return -1;
+        }
+
+        cros_gralloc_handle_t handle = get_handle(ev.info.remote_handle);
+        if (!handle) {
+            return -1;
+        }
+
+        mHwcHandler(FRAME_DISPLAY, handle);
+
+        ev.event.type = VHAL_DD_EVENT_DISPLAY_ACK;
+        ev.event.size = sizeof(ev);
+        len = send(fd, &ev, sizeof(ev), 0);
+        if (len <= 0) {
+            AIC_LOG(mDebug, "send() failed: %s\n", strerror(errno));
+            return -1;
+        }
+
+        return 0;
+    }
+
+    private:
+        unique_ptr<IStreamSocketClient> socket_client_;
+        struct ConfigInfo mInfo;
+        HwcHandler  mHwcHandler = nullptr;
+        atomic<bool> should_continue_ = false;
+        int renderNode = -1;
+        std::unique_ptr<std::thread> mWorkThread;
+        int sockClientFd = -1;
+        int mDebug = 2;
+        std::map<uint64_t, cros_gralloc_handle_t> mHandles;
+
+};
+}
+}
+#endif

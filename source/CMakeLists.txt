@@ -11,6 +11,7 @@ list (APPEND SOURCES vsock_stream_socket_client.cc)
 list (APPEND SOURCES audio_sink.cc)
 list (APPEND SOURCES audio_source.cc)
 list (APPEND SOURCES virtual_input_receiver.cc)
+list (APPEND SOURCES hwc_vhal.cc)
 list (APPEND SOURCES virtual_gps_receiver.cc)
 list (APPEND SOURCES command_channel_interface.cc)
 

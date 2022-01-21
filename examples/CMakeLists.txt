@@ -53,7 +53,11 @@ target_link_libraries (virtual_gps_receiver_sample LINK_PUBLIC ${PROJECT_NAME})
 add_executable (command_channel_client command_channel_client.cc)
 target_link_libraries (command_channel_client LINK_PUBLIC ${PROJECT_NAME})
 
+add_executable (hwc_example hwc_example.cpp)
+target_link_libraries (hwc_example LINK_PUBLIC ${PROJECT_NAME})
+
 install(TARGETS camera_socket_client
+                hwc_example
                 camera_client
                 sensor_client
                 stream
