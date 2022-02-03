@@ -113,9 +113,9 @@ public:
         sensor_type_t type;
         int32_t enabled;
         /**
-         * samplingPeriod_ns is the frequency at which data events are expected.
+         * samplingPeriod_ms is the frequency at which data events are expected.
          */
-        int32_t samplingPeriod_ns;
+        int32_t samplingPeriod_ms;
     };
 
     /**
