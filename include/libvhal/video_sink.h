@@ -62,6 +62,7 @@ public:
         CAMERA_DATA = 3,
         ACK = 4,
         CAMERA_INFO = 5,
+        CAMERA_USER_ID = 6
     };
 
     /**
@@ -202,10 +203,11 @@ public:
      *
      * @param unix_conn_info Information needed to connect to the unix vhal socket.
      * @param callback Camera callback function object or lambda or function
-     * pointer.
+     *        pointer.
+     * @param user_id Optional parameter to specify the user# in multi-user config.
      *
      */
-    VideoSink(UnixConnectionInfo unix_conn_info, CameraCallback callback);
+    VideoSink(UnixConnectionInfo unix_conn_info, CameraCallback callback, const int32_t user_id = -1);
 
     /**
      * @brief Construct a default VideoSink object from the Android vm cid.

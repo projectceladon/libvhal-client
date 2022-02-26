@@ -34,7 +34,7 @@
 namespace vhal {
 namespace client {
 
-VideoSink::VideoSink(UnixConnectionInfo unix_conn_info, CameraCallback callback)
+VideoSink::VideoSink(UnixConnectionInfo unix_conn_info, CameraCallback callback, const int32_t user_id)
 {
     auto sockPath = unix_conn_info.socket_dir;
     if (sockPath.length() == 0) {
@@ -49,7 +49,7 @@ VideoSink::VideoSink(UnixConnectionInfo unix_conn_info, CameraCallback callback)
     //Creating interface to communicate to VHAL via libvhal
     auto unix_sock_client =
       std::make_unique<UnixStreamSocketClient>(std::move(sockPath));
-    impl_ = std::make_unique<Impl>(std::move(unix_sock_client), callback);
+    impl_ = std::make_unique<Impl>(std::move(unix_sock_client), callback, user_id);
 }
 
 VideoSink::VideoSink(VsockConnectionInfo vsock_conn_info, CameraCallback callback)

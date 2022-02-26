@@ -52,11 +52,11 @@ namespace client {
 class VideoSink::Impl
 {
 public:
-    Impl(unique_ptr<IStreamSocketClient> socket_client, CameraCallback callback)
+    Impl(unique_ptr<IStreamSocketClient> socket_client, CameraCallback callback, const int32_t user_id = -1)
       : socket_client_{ move(socket_client) },
         callback_{ move(callback) }
     {
-        vhal_talker_thread_ = thread([this]() {
+        vhal_talker_thread_ = thread([this, user_id]() {
             while (should_continue_) {
                 if (not socket_client_->Connected()) {
                     if (auto [connected, error_msg] = socket_client_->Connect();
@@ -67,7 +67,14 @@ public:
                         this_thread::sleep_for(1s);
                         continue;
                     }
-                    cout << "Connected to Camera VHal!\n";
+                    cout << "Connected to Camera VHal!, Sending user_id: " << user_id << "\n";
+                    if (user_id != -1) {
+                        camera_header_t header_packet{};
+                        header_packet.type = VideoSink::camera_packet_type_t::CAMERA_USER_ID;
+                        header_packet.size = sizeof(user_id);
+                        SendRawPacket((unsigned char*)&header_packet, sizeof(camera_header_t));
+                        SendRawPacket((unsigned char*)&user_id, sizeof(user_id));
+                    }
                 }
 
                 struct pollfd fds[1];
