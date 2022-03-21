@@ -21,7 +21,7 @@ enum CommandType
 
 struct ConfigInfo
 {
-    UnixConnectionInfo unix_conn_info = {"", -1};
+    UnixConnectionInfo unix_conn_info;
     int video_res_width = 0;
     int video_res_height = 0;
     std::string video_device = "";
