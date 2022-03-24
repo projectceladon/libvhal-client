@@ -194,9 +194,11 @@ public:
             // connected ...
 
 	    ret = poll(fds, std::size(fds), timeout_ms);
-	    if (ret <= 0) {
+	    if (ret < 0) {
 	        socket_client_->Close();
 		continue; //this will goto Connect();
+	    } else if (ret == 0) {
+	        continue;
 	    } else {
                 display_event_t ev{};
                 ssize_t len = read(socket_client_->GetNativeSocketFd(), &ev, sizeof(ev));
