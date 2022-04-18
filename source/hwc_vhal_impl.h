@@ -302,7 +302,7 @@ public:
       ev.dispPort.port = mInfo.user_id;
 
       ssize_t len = 0;
-      send(fd, &ev, sizeof(ev), 0);
+      len = send(fd, &ev, sizeof(ev), 0);
       if (len <= 0) {
           AIC_LOG(mDebug, "send() failed: %s\n", strerror(errno));
       }
