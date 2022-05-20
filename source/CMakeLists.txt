@@ -17,6 +17,7 @@ list (APPEND SOURCES virtual_input_receiver.cc)
 list (APPEND SOURCES hwc_vhal.cc)
 list (APPEND SOURCES virtual_gps_receiver.cc)
 list (APPEND SOURCES command_channel_interface.cc)
+list (APPEND SOURCES hwc_profile_log.cc)
 
 # Build libvhal-client
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
