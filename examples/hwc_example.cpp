@@ -42,10 +42,15 @@ int main(int argc, char* argv[])
     cfg.video_device = "/dev/dri/renderD128";
     cfg.user_id = 0;
 
-    if (getenv("K8S_ENV") == NULL || strcmp(getenv("K8S_ENV"), "true") != 0) {
+    const char *ret = getenv("K8S_ENV");
+    if (ret == NULL || strncmp(ret, "true", 4) != 0) {
         // docker env
-        cfg.unix_conn_info.socket_dir = std::string(getenv("AIC_WORKDIR")) + "/ipc";
-        cfg.unix_conn_info.android_instance_id = 0; //id is required for docker env
+        char *env = getenv("AIC_WORKDIR");
+        if (env != NULL) {
+            std::string str = env;
+            cfg.unix_conn_info.socket_dir = std::string(str + "/ipc");
+            cfg.unix_conn_info.android_instance_id = 0; //id is required for docker env
+        }
     } else {
         // k8s env
         cfg.unix_conn_info.socket_dir = "/conn";
@@ -92,9 +97,13 @@ int main(int argc, char* argv[])
 
         if (index == 6000) {
             delete receiver;
+            receiver = NULL;
         }
         this_thread::sleep_for(5ms);
     }
+
+    if (receiver != NULL)
+        delete receiver;
     return 0;
 
 }

@@ -65,18 +65,12 @@ int main(int argc, char** argv)
     SensorInterface::SensorDataPacket event;
     UnixConnectionInfo conn_info = { socketPath, instanceId };
 
+    auto callback = [&](const SensorInterface::CtrlPacket& ctrlPkt) {
+        std::unique_lock<std::mutex> lck(sensorMapMutex);
+        mSensorMap.insert({ctrlPkt.type, ctrlPkt.enabled});
+    };
     /* Create sensor Interface with LibVHAL */
-    try {
-        sensorHALIface = make_unique<SensorInterface>(conn_info,
-          [&](const SensorInterface::CtrlPacket& ctrlPkt) {
-            std::unique_lock<std::mutex> lck(sensorMapMutex);
-            mSensorMap.insert({ctrlPkt.type, ctrlPkt.enabled});
-        });
-    } catch (const std::exception& ex) {
-        cout << "Sensors creation error :"
-             << ex.what() << endl;
-        exit(1);
-    }
+    sensorHALIface = std::make_unique<SensorInterface>(conn_info, callback, -1);
 
     /* Start a thread to send dummy sensor data for ACCELEROMETER sensor*/
     thread sensor_thread;

@@ -519,7 +519,9 @@ main(int argc, char* argv[])
     char kDevNameId[64] = {
         '\0',
     };
-    if (getenv("K8S_ENV") != NULL && strcmp(getenv("K8S_ENV"), "true") == 0) {
+
+    const char *ret = getenv("K8S_ENV");
+    if (ret != NULL && strncmp(ret, "true", 4) == 0) {
         sprintf(kDevNameId, "%s-%d", "/conn/input-pipe", input);
     } else {
         sprintf(kDevNameId,
@@ -553,5 +555,6 @@ main(int argc, char* argv[])
     if ((cmd & 0x20) > 0)
         TestDisableJoystick(vir);
 
+    delete vir;
     return 0;
 }

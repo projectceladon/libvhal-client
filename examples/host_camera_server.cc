@@ -94,7 +94,7 @@ void get_all_dev_nodes()
             cout <<"cam_info: Can't get capabilities\n";
         else {
 	    if(!strcmp((const char*)video_cap.driver, "v4l2 loopback"))
-	        strcpy(device_index, dev_name);
+	        strncpy(device_index, dev_name, 11);
         }
         close(fd);
     }

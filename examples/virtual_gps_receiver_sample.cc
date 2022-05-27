@@ -64,7 +64,7 @@ do_geo_nmea(char* args)
     printf("Note: currently, the size of s is fixed(S_SIZE: %d)\n", S_SIZE);
     memset(s, 0, S_SIZE);
     s_len = strlen(args);
-    strncpy(s, args, s_len);
+    strncpy(s, args, sizeof(s) - 1);
     s[s_len++] = '\n';
 
 #ifdef USE_ANDROID_VIRTUAL_GPS_HAL
@@ -99,7 +99,7 @@ do_geo_fix(char* args)
     int      ret = -1;
 
     if (!p) {
-        printf("KO: argument '%s' is NULL\n", p);
+        printf("KO: argument  is NULL\n");
         return -1;
     }
 
@@ -248,7 +248,7 @@ do_geo_fix(char* args)
 void*
 injection_gps_data_thread(void* args)
 {
-    char   lat_long[32];
+    char   lat_long[64];
     size_t lat_long_len = 0;
     int    ret          = 0;
     int    long_max     = gps_long + 1;
@@ -378,8 +378,8 @@ main(int argc, char* argv[])
                 break;
             case 's':
                 p_opt_arg = optarg;
-                strcpy(server_ip, p_opt_arg);
-                printf("Set server_ip to %s\n", server_ip);
+                strncpy(server_ip, p_opt_arg, sizeof(server_ip) - 1);
+                server_ip[sizeof(server_ip) -1] = '\0';
                 break;
             case 'p':
                 p_opt_arg = optarg;
@@ -401,8 +401,6 @@ main(int argc, char* argv[])
         }
     }
 
-    printf("server_ip = %s port = %d\n", server_ip, port);
-
 #ifdef USE_ANDROID_VIRTUAL_GPS_HAL
     struct TcpConnectionInfo tci;
     tci.ip_addr = server_ip;
@@ -411,13 +409,12 @@ main(int argc, char* argv[])
 
     char str[16];
     int  flag = 1;
-    int  ret  = 0;
 
     while (flag) {
         memset(str, 0, sizeof(str));
         printf("%s Please input comand('q' for quit):", __func__);
-        ret = scanf("%s", str);
-        if (EOF == ret) {
+	char *ret = fgets(str, 1, stdin);
+        if (ret == NULL) {
             printf("%s Fail to get input. Continue. \n", __func__);
             continue;
         }

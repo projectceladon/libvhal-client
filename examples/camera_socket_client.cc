@@ -87,11 +87,11 @@ main(int argc, char** argv)
         usage(argv);
         exit(1);
     }
-    const char* filename = argv[1];
 
-    FILE* f = fopen(filename, "rb");
+    std::string filename(argv[1]);
+    FILE* f = fopen(filename.c_str(), "rb");
     if (!f) {
-        fprintf(stderr, "Could not open %s\n", filename);
+        fprintf(stderr, "Could not open %s\n", filename.c_str());
         exit(1);
     }
 

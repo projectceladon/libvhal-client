@@ -70,9 +70,9 @@ main(int argc, char** argv)
             switch (ctrl_msg.cmd) {
                 case VideoSink::camera_cmd_t::CMD_OPEN: {
                     cout << "Received Open command from Camera VHal\n";
-                    auto video_params = ctrl_msg.video_params;
-                    auto codec_type   = video_params.codec_type;
-                    auto frame_res    = video_params.resolution;
+                    auto camera_config = ctrl_msg.camera_config;
+                    auto codec_type    = camera_config.codec_type;
+                    auto frame_res     = camera_config.resolution;
 
                     // Make sure to interpret codec type and frame resolution and
                     // provide video input that match these params.
