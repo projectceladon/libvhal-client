@@ -50,6 +50,7 @@ class VsockStreamSocketClient::Impl
 public:
     Impl(const int android_vm_cid)
     {
+        server_ = {};
         server_.svm_cid = android_vm_cid;
         server_.svm_family = AF_VSOCK;
         server_.svm_port = DEFAULT_PORT_CAMERA;

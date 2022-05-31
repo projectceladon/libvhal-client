@@ -63,6 +63,15 @@ public:
         struct cmsghdr* p_cmsg;
         int* p_fds;
 
+	if (pfd == NULL) {
+	    return -1;
+	}
+
+	if ((fdlen == 0) || (fdlen > DRV_MAX_PLANES)) {
+	    AIC_LOG(mDebug, "wrong fdlen(%d), it should be less than the DRV_MAX_PLANES\n", fdlen);
+	    return -1;
+	}
+
         vec.iov_base = rdata;
         vec.iov_len = 16;
         msg.msg_name = NULL;
@@ -74,7 +83,6 @@ public:
         msg.msg_flags = 0;
 
         p_fds = (int*)CMSG_DATA(CMSG_FIRSTHDR(&msg));
-        *p_fds = -1;
         count = recvmsg(fd, &msg, MSG_WAITALL);
         if (count < 0) {
             printf("Failed to recv fd from remote\n");
@@ -223,7 +231,9 @@ public:
                           break;
                         case VHAL_DD_EVENT_CREATE_BUFFER:
                           AIC_LOG(mDebug, "VHAL_DD_EVENT_CREATE_BUFFER\n");
-                          CreateBuffer(socket_client_->GetNativeSocketFd(), ev.size);
+                          if (ev.size == sizeof(buffer_info_event_t) + sizeof(cros_gralloc_handle)) {
+                              CreateBuffer(socket_client_->GetNativeSocketFd());
+                          }
                           break;
                         case VHAL_DD_EVENT_REMOVE_BUFFER:
                           AIC_LOG(mDebug, "VHAL_DD_EVENT_REMOVE_BUFFER\n");
@@ -317,18 +327,13 @@ public:
      *
      * body: cros_gralloc_handle_t
      */
-    int CreateBuffer(int fd, int size)
+    int CreateBuffer(int fd)
     {
         buffer_info_event_t ev{};
         ssize_t len = 0;
         int ret = -1;
 
-        if ((uint32_t)size < sizeof(ev) || size - sizeof(ev) < sizeof(cros_gralloc_handle_t)) {
-            AIC_LOG(mDebug, "Wrong buffer size  %d to recv\n", size);
-            return -1;
-        }
-
-        auto handle = (cros_gralloc_handle_t)malloc(size - sizeof(ev));
+        auto handle = (cros_gralloc_handle_t)malloc(sizeof(cros_gralloc_handle));
         if (handle == nullptr) {
             AIC_LOG(mDebug, "Failed to allocate local buffer handle: %s\n", strerror(errno));
             ret = -errno;
@@ -342,7 +347,7 @@ public:
             return -1;
         }
 
-        len = recv(fd, handle, size - sizeof(ev), 0);
+        len = recv(fd, handle, sizeof(cros_gralloc_handle), 0);
         if (len <= 0) {
             free(handle);
             AIC_LOG(mDebug, "Failed to read buffer info: %s\n", strerror(errno));

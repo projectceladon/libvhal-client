@@ -44,7 +44,7 @@ public:
     Impl(const std::string& remote_server_socket_path)
     {
         remote_.sun_family = AF_UNIX;
-        strcpy(remote_.sun_path, remote_server_socket_path.c_str());
+        strncpy(remote_.sun_path, remote_server_socket_path.c_str(), sizeof(remote_.sun_path) -1);
     }
     ~Impl() { Close(); }
 

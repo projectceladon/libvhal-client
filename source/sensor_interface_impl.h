@@ -163,12 +163,13 @@ public:
                 return {-1, "Sensor Type not supported"};
         }
 
-        int32_t dataHeaderLen = sizeof(vhal_sensor_event_t) - sizeof(sensor_event.fdata);
-        int32_t dataPayLoadLen = dataCount * sizeof(float);
-        const int32_t totalPayloadLen = dataHeaderLen + dataPayLoadLen;
+        const size_t dataHeaderLen = sizeof(vhal_sensor_event_t) - sizeof(sensor_event.fdata);
+        const size_t dataPayLoadLen = dataCount * sizeof(float);
+        const size_t totalPayloadLen = dataHeaderLen + dataPayLoadLen;
         sensor_event.type = event->type;
         sensor_event.fdataCount = dataCount;
         sensor_event.timestamp_ns = event->timestamp_ns;
+        sensor_event.fdata = nullptr;
         uint8_t dataPtr[totalPayloadLen];
         std::memmove(dataPtr, &sensor_event, dataHeaderLen);
         std::memmove((dataPtr + dataHeaderLen), event->fdata, dataPayLoadLen);

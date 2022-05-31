@@ -53,8 +53,8 @@ enum MsgType
 struct CommandChannelMessage
 {
     MsgType msg_type = MsgType::kNone;
-    uint8_t* data;
-    uint32_t data_size;
+    uint8_t* data = nullptr;
+    uint32_t data_size = 0;
 };
 
 /**

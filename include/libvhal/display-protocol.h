@@ -96,6 +96,7 @@ struct cros_gralloc_handle {
   uint32_t width;
   uint32_t height;
   uint32_t format;       /* DRM format */
+  uint32_t tiling_mode;
   uint32_t use_flags[2]; /* Buffer creation flags */
   uint32_t magic;
   uint32_t pixel_stride;
@@ -113,6 +114,8 @@ struct cros_gralloc_handle {
   uint32_t compression_mode;
   uint32_t compression_hint;
   uint32_t codec;
+  uint32_t aligned_width;
+  uint32_t aligned_height;
 };
 
 typedef struct cros_gralloc_handle* cros_gralloc_handle_t;
