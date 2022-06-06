@@ -43,7 +43,9 @@ enum MsgType
     // Represents message or command that interacts with ActivityMonitorService.
     kActivityMonitor = 1,
     // Represents message or command that interacts with AicCommandService.
-    kAicCommand = 2
+    kAicCommand = 2,
+    // Represents message or command that interacts with FileTransferService.
+    kFileTransfer = 3
 };
 
 /**

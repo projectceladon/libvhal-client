@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #define COMMAND_CHANNEL_ACTIVITY_MONITOR_PORT 8770
 #define COMMAND_CHANNEL_AIC_COMMAND_PORT 8771
+#define COMMAND_CHANNEL_FILE_TRANSFER_PORT 8773
 
 namespace vhal {
 namespace client {
@@ -41,8 +42,13 @@ CommandChannelInterface::CommandChannelInterface(TcpConnectionInfo tcp_conn_info
     auto tcp_sock_aic_command_client =
         std::make_unique<TcpStreamSocketClient>(tcp_conn_info.ip_addr,
         COMMAND_CHANNEL_AIC_COMMAND_PORT);
+    auto tcp_sock_file_transfer_client =
+        std::make_unique<TcpStreamSocketClient>(tcp_conn_info.ip_addr,
+        COMMAND_CHANNEL_FILE_TRANSFER_PORT);
     impl_ = std::make_unique<Impl>(std::move(tcp_sock_activity_monitor_client),
-                                   std::move(tcp_sock_aic_command_client), callback);
+                                   std::move(tcp_sock_aic_command_client),
+                                   std::move(tcp_sock_file_transfer_client),
+                                   callback);
 }
 
 CommandChannelInterface::~CommandChannelInterface() {}
