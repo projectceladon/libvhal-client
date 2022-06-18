@@ -6,6 +6,12 @@ project (vhal-client VERSION 0.1 DESCRIPTION "VHAL Client library written in C++
 
 option(BUILD_EXAMPLES "Build examples?" ON)
 
+option(BUILD_EMULATOR_APP "Enable AIC Emulator build for ICR unit testing?" OFF)
+
+if (BUILD_EMULATOR_APP )
+  message(STATUS "BUILD_EMULATOR_APP enabled")
+endif()
+
 message(STATUS "Project name: ${PROJECT_NAME}")
 
 
@@ -39,6 +45,10 @@ add_subdirectory (include/libvhal)
 if (BUILD_EXAMPLES)
   add_subdirectory (examples)
 endif()
+if (BUILD_EMULATOR_APP)
+  add_subdirectory (aic-emu)
+endif()
+
 
 #Add pkg-config file
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/pkg-config.pc.cmake" ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY)
