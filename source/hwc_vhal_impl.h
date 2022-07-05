@@ -149,6 +149,16 @@ public:
         should_continue_ = false;
         mWorkThread->join();
         socket_client_->Close();
+        // Free the buffer handles
+        for (auto const& [rh, lh] : mHandles) {
+            if (mHwcHandler) {
+                mHwcHandler(FRAME_REMOVE, lh);
+            }
+            close(lh->fds[0]);
+            free(lh);
+        }
+        mHandles.clear();
+
         AIC_LOG(mDebug, "stop is: %s", "successful!");
         return {0, error_msg};
     }
