@@ -27,6 +27,8 @@ enum dd_event {
     VHAL_DD_EVENT_DISPPORT_ACK = 0x1701,
 
     VHAL_DD_EVENT_SETUP_RESOLUTION = 0x1800,
+
+    VHAL_DD_EVENT_SET_VIDEO_ALPHA_REQ = 0x1900,
 };
 
 struct display_info_t {
@@ -74,6 +76,16 @@ struct display_port_t {
 struct display_port_event_t {
   display_event_t event;
   display_port_t dispPort;
+};
+
+struct set_video_alpha_t {
+  uint32_t enable;
+  uint32_t reserved[3];
+};
+
+struct display_set_video_alpha_event_t {
+  display_event_t event;
+  set_video_alpha_t alpha;
 };
 
 typedef struct native_handle {

@@ -38,6 +38,7 @@ public:
     IOResult start();
     IOResult stop();
     IOResult setMode(int width, int height);
+    IOResult setVideoAlpha(int action);
 
 private:
     class Impl;

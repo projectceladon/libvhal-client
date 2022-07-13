@@ -192,6 +192,29 @@ public:
         return {0, error_msg};
     }
 
+    IOResult setVideoAlpha(int action)
+    {
+        std::string error_msg = "";
+        if (should_continue_ == false) {
+            error_msg = "ERROR: it's not started, please start firstly!";
+            return {-1, error_msg};
+        }
+        display_set_video_alpha_event_t ev;
+
+        memset(&ev, 0, sizeof(ev));
+        ev.event.type = VHAL_DD_EVENT_SET_VIDEO_ALPHA_REQ;
+        ev.event.size = sizeof(ev);
+
+        ev.alpha.enable = action;
+        ssize_t len = 0;
+        len = send(socket_client_->GetNativeSocketFd(), &ev, sizeof(ev), 0);
+        if (len <= 0) {
+            error_msg = std::strerror(errno);
+            return {-1, error_msg};
+        }
+        return {0, error_msg};
+    }
+
     void workThreadProc()
     {
         while (should_continue_) {
