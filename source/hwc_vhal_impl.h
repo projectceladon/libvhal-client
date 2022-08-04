@@ -14,6 +14,11 @@
 #include "display-protocol.h"
 using namespace std;
 
+#define fourcc_code(a,b,c,d) ((uint32_t)(a) | ((uint32_t)(b) << 8) | \
+    ((uint32_t)(c) << 16) | ((uint32_t)(d) << 24))
+#define DRM_FORMAT_NV12_Y_TILED_INTEL fourcc_code('9', '9', '9', '6')
+#define DRM_FORMAT_NV12               fourcc_code('N', 'V', '1', '2')
+
 namespace vhal {
 namespace client {
 
@@ -366,6 +371,10 @@ public:
         if (recvFds(fd, handle->fds, handle->base.numFds) == -1) {
             free(handle);
             return -1;
+        }
+        // Unified NV12 format
+        if (handle->format == DRM_FORMAT_NV12_Y_TILED_INTEL) {
+            handle->format = DRM_FORMAT_NV12;
         }
         AIC_LOG(mDebug, "createBuffer width(%d)height(%d)\n", handle->width, handle->height);
         mHandles.insert(std::make_pair(ev.info.remote_handle, handle));
