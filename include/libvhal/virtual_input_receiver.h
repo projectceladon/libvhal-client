@@ -47,7 +47,7 @@ protected:
 
 private:
     struct UnixConnectionInfo mUci;
-    static const uint32_t     kMaxSlot       = 9;
+    static const uint32_t     kMaxSlot       = 10;
     static const uint32_t     kMaxMajor      = 15;
     static const uint32_t     kMaxPositionX  = 32767;
     static const uint32_t     kMaxPositionY  = 32767;
