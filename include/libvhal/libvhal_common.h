@@ -36,6 +36,8 @@ struct TcpConnectionInfo
      * default.
      */
     uint16_t port = 0;
+    // Status dir path to update the connection status.
+    std::string status_dir = "";
 };
 
 /**
@@ -49,6 +51,8 @@ struct UnixConnectionInfo
     // specifies the Instance/Session id of the Android instance, if valid.
     // In K8S-like environments(1 instance per pod), this can be omitted.
     int android_instance_id = -1;
+    // Status dir path to update the connection status.
+    std::string status_dir = "";
 };
 
 /**

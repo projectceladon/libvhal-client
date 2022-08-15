@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <inttypes.h>
 #include <linux/input.h>
+#include <memory>
 #include <string.h>
 #include <unistd.h>
 
@@ -68,6 +69,8 @@ private:
     int32_t  mTrackingId   = 0;
     uint32_t mEnabledSlots = 0;
     int      mDebug        = 0;
+    class StatusProber;
+    std::unique_ptr<StatusProber> mStatusProber;
 };
 
 } // namespace client

@@ -1,18 +1,23 @@
 
 #include "virtual_input_receiver.h"
 #include "receiver_log.h"
+#include "status_prober.h"
+
 namespace vhal {
 namespace client {
 
 VirtualInputReceiver::VirtualInputReceiver(struct UnixConnectionInfo uci)
   : mUci(uci)
 {
+    mStatusProber = std::make_unique<StatusProber>(mUci.status_dir);
+    mStatusProber->UpdateStatus("disconnected");
     CreateTouchDevice(uci);
 }
 
 VirtualInputReceiver::~VirtualInputReceiver()
 {
     if (mFd >= 0) {
+        mStatusProber->UpdateStatus("disconnected");
         close(mFd);
     }
 }
@@ -20,16 +25,19 @@ VirtualInputReceiver::~VirtualInputReceiver()
 bool
 VirtualInputReceiver::CreateTouchDevice(struct UnixConnectionInfo uci)
 {
-    printf("%s:%d Create virtual touch channel\n", __func__, __LINE__);
+    if (mFd > -1) {
+        AIC_LOG(LIBVHAL_INFO,
+                "Virtual touch channel is already open. mFd = %d",
+                mFd);
+        return true;
+    }
     mFd = open(uci.socket_dir.c_str(), O_RDWR | O_NONBLOCK, 0);
-    if (mFd < 0) {
-        perror("Failed to open pipe for read error");
-        return false;
+    if (mFd >= 0) {
+        AIC_LOG(LIBVHAL_INFO, "Open %s successfully.", uci.socket_dir.c_str());
+        mStatusProber->UpdateStatus("connected");
     } else {
-        printf("%s:%d Open %s successfully.\n",
-               __func__,
-               __LINE__,
-               uci.socket_dir.c_str());
+        AIC_LOG(LIBVHAL_ERROR, "Failed to open pipe for read error");
+        return false;
     }
     return true;
 }
@@ -52,8 +60,11 @@ VirtualInputReceiver::SendEvent(uint16_t type, uint16_t code, int32_t value)
         AIC_LOG(mDebug, "type: %d code: %d value: %d", type, code, value);
 
     if (write(mFd, &ev, sizeof(struct input_event)) < 0) {
-        perror("Failed to send event\n");
-        return false;
+        AIC_LOG(LIBVHAL_ERROR, "Failed to send event");
+        mStatusProber->UpdateStatus("disconnected");
+        close(mFd);
+        mFd = -1;
+        return CreateTouchDevice(mUci);
     }
     return true;
 }
