@@ -24,7 +24,7 @@ namespace client {
 #ifndef __android__
 #define AIC_LOG(level, fmt, ...)                                               \
     do {                                                                       \
-        if (level > LIBVHAL_INFO) {                                            \
+        if (level >= LIBVHAL_INFO) {                                            \
             printf("%s %ld %s(%d): " fmt "\n",                                 \
                    (level == 4)                                                \
                      ? "ERR"                                                   \
@@ -41,7 +41,7 @@ namespace client {
 #else
 #define AIC_LOG(level, fmt, ...)                                               \
     do {                                                                       \
-        if (level > LIBVHAL_INFO) {                                            \
+        if (level >= LIBVHAL_INFO) {                                            \
             __android_log_print(                                               \
               (level == 4)                                                     \
                 ? ANDROID_LOG_ERROR                                            \
