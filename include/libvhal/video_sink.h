@@ -56,7 +56,7 @@ public:
      *
      */
     enum camera_packet_type_t : uint32_t {
-        REQUST_CAPABILITY = 0,
+        REQUEST_CAPABILITY = 0,
         CAPABILITY = 1,
         CAMERA_CONFIG = 2,
         CAMERA_DATA = 3,

@@ -203,9 +203,9 @@ public:
     std::shared_ptr<camera_capability_t> GetCameraCapabilty()
     {
         std::tuple<ssize_t, std::string> response;
-        camera_header_t header_packet;
+        camera_header_t header_packet{};
 
-        header_packet.type = VideoSink::camera_packet_type_t::REQUST_CAPABILITY;
+        header_packet.type = VideoSink::camera_packet_type_t::REQUEST_CAPABILITY;
         response = SendRawPacket((unsigned char*)&header_packet, sizeof(camera_header_t));
         if (get<0>(response) == -1) {
             get<1>(response) = "Error in sending request capability header to Camera VHal: "
