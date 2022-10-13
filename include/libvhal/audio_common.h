@@ -18,6 +18,7 @@
  *
  */
 
+#include <cstdint>
 #include <functional>
 #include "android_audio_core.h"
 
