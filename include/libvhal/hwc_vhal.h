@@ -28,7 +28,7 @@ struct ConfigInfo
     int user_id = 0;
 };
 
-using HwcHandler = std::function<void(CommandType cmd, cros_gralloc_handle_t handle)>;
+using HwcHandler = std::function<void(CommandType cmd, const frame_info_t* frame)>;
 
 class VirtualHwcReceiver
 {
@@ -38,7 +38,7 @@ public:
     IOResult start();
     IOResult stop();
     IOResult setMode(int width, int height);
-    IOResult setVideoAlpha(int action);
+    IOResult setVideoAlpha(uint32_t action);
 
 private:
     class Impl;

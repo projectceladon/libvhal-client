@@ -53,7 +53,7 @@ IOResult VirtualHwcReceiver::setMode(int width, int height)
     return impl_->setMode(width, height);
 }
 
-IOResult VirtualHwcReceiver::setVideoAlpha(int action)
+IOResult VirtualHwcReceiver::setVideoAlpha(uint32_t action)
 {
     return impl_->setVideoAlpha(action);
 }

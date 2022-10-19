@@ -157,7 +157,8 @@ public:
         // Free the buffer handles
         for (auto const& [rh, lh] : mHandles) {
             if (mHwcHandler) {
-                mHwcHandler(FRAME_REMOVE, lh);
+                frame_info_t frame = {.handle = lh, .ctrl = nullptr};
+                mHwcHandler(FRAME_REMOVE, &frame);
             }
             close(lh->fds[0]);
             free(lh);
@@ -192,7 +193,7 @@ public:
         return {0, error_msg};
     }
 
-    IOResult setVideoAlpha(int action)
+    IOResult setVideoAlpha(uint32_t action)
     {
         std::string error_msg = "";
         if (should_continue_ == false) {
@@ -279,7 +280,7 @@ public:
                           break;
                         case VHAL_DD_EVENT_DISPLAY_REQ:
                           //AIC_LOG(mDebug, "VHAL_DD_EVENT_DISPLAY_REQ\n");
-                          DisplayRequest(socket_client_->GetNativeSocketFd());
+                          DisplayRequest(socket_client_->GetNativeSocketFd(), ev.size - sizeof(ev));
                           break;
                         default:
                           AIC_LOG(mDebug, "VHAL_DD_EVENT_<unknown>: ev.type=%d\n", ev.type);
@@ -401,7 +402,8 @@ public:
         }
         AIC_LOG(mDebug, "createBuffer width(%d)height(%d)\n", handle->width, handle->height);
         mHandles.insert(std::make_pair(ev.info.remote_handle, handle));
-        mHwcHandler(FRAME_CREATE, handle);
+        frame_info_t frame = {.handle = handle, .ctrl = nullptr};
+        mHwcHandler(FRAME_CREATE, &frame);
 
         return 0;
     }
@@ -421,7 +423,8 @@ public:
         if (!handle) {
             return -1;
         }
-        mHwcHandler(FRAME_REMOVE, handle);
+        frame_info_t frame = {.handle = handle, .ctrl = nullptr};
+        mHwcHandler(FRAME_REMOVE, &frame);
         close(handle->fds[0]);
         free(handle);
 
@@ -430,13 +433,26 @@ public:
         return 0;
     }
 
-    int DisplayRequest(int fd) {
+    int DisplayRequest(int fd, int size) {
         buffer_info_event_t ev{};
         ssize_t len = 0;
+        if (size < sizeof(ev.info)) {
+            AIC_LOG(mDebug, "Wrong data size in displayBuffer message\n");
+            return -1;
+        }
         len = recv(fd, &ev.info, sizeof(ev.info), 0);
         if (len <= 0) {
             AIC_LOG(mDebug, "Failed to read buffer info: %s\n", strerror(errno));
             return -1;
+        }
+        display_control_t ctrl{};
+        bool hasCtrl = (size == (sizeof(ev.info) + sizeof(display_control_t)));
+        if (hasCtrl) {
+            len = recv(fd, &ctrl, sizeof(display_control_t), 0);
+            if (len <= 0) {
+                AIC_LOG(mDebug, "Failed to read display control info: %s\n", strerror(errno));
+                return -1;
+            }
         }
 
         cros_gralloc_handle_t handle = get_handle(ev.info.remote_handle);
@@ -444,7 +460,8 @@ public:
             return -1;
         }
 
-        mHwcHandler(FRAME_DISPLAY, handle);
+        frame_info_t frame = {.handle = handle, .ctrl = hasCtrl ? &ctrl : nullptr};
+        mHwcHandler(FRAME_DISPLAY, &frame);
 
         ev.event.type = VHAL_DD_EVENT_DISPLAY_ACK;
         ev.event.size = sizeof(ev);
