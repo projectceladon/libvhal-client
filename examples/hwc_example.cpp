@@ -10,7 +10,7 @@ using namespace vhal::client;
 
 //static dpipe_t *videoPipe = nullptr;
 
-void cmd_handler(CommandType cmd, cros_gralloc_handle_t handle)
+void cmd_handler(CommandType cmd, const frame_info_t* frame)
 {
     switch (cmd) {
 

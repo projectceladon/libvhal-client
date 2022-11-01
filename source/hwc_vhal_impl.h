@@ -73,7 +73,7 @@ public:
 	}
 
 	if ((fdlen == 0) || (fdlen > DRV_MAX_PLANES)) {
-	    AIC_LOG(mDebug, "wrong fdlen(%d), it should be less than the DRV_MAX_PLANES\n", fdlen);
+	    AIC_LOG(mDebug, "wrong fdlen(%zd), it should be less than the DRV_MAX_PLANES\n", fdlen);
 	    return -1;
 	}
 
@@ -436,7 +436,7 @@ public:
     int DisplayRequest(int fd, int size) {
         buffer_info_event_t ev{};
         ssize_t len = 0;
-        if (size < sizeof(ev.info)) {
+        if (size < (int)sizeof(ev.info)) {
             AIC_LOG(mDebug, "Wrong data size in displayBuffer message\n");
             return -1;
         }
