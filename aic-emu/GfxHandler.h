@@ -113,10 +113,10 @@ class GfxHandler
 {
 public:
 
-    GfxHandler(const char* deviceStr = nullptr);
+    GfxHandler() {};
     ~GfxHandler();
 
-    GfxStatus GfxInit();
+    GfxStatus GfxInit(std::string deviceString);
     GfxStatus GfxClose();
     GfxStatus AllocateBo(SurfaceParams_t& surf, uint64_t handle);
     GfxStatus ClearBo(uint64_t handle, bool erase = true);

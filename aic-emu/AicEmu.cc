@@ -20,24 +20,16 @@
 #include <memory>
 #include "CmdHandler.h"
 
-struct AicConfigData_t
-{
-    std::string ymlFileName;
-    std::string contentFileName;
-    std::string deviceString;
-    AicSocketData_t socketInfo;
-};
-
 void Usage()
 {
     std::cout << "Usage: aic-emu <mandatory options> [non-mandatory options] " << std::endl;
+    std::cout << "--help, -h                 : Print this help and exit" << std::endl;
     std::cout << "\nMandatory options:" << std::endl;
-    std::cout << "  --cmd <yml file path>  : Path of YML file containing AiC cmd sequence" << std::endl;
-    std::cout << "  --content <clip path>  : Path of clip to serve as content" << std::endl;
-    std::cout << "  --hwc-sock <socketpath>: Path of Unix Socket file" << std::endl;
+    std::cout << "  --cmd <yml file path>    : Path of YML file containing AiC cmd sequence" << std::endl;
+    std::cout << "  --content <clip path>    : Path of clip to serve as content" << std::endl;
+    std::cout << "  --hwc-sock <socketpath>  : Path of Unix Socket file" << std::endl;
     std::cout << "\nNon-Mandatory options:" << std::endl;
-    std::cout << "  --device <device path> : Device path. Default /dev/dri/renderD128" << std::endl;
-    std::cout << "  --help, -h             : Print this help and exit" << std::endl;
+    std::cout << "  --device <device path>   : Device path. Default /dev/dri/renderD128" << std::endl;
     return;
 }
 
@@ -114,11 +106,11 @@ int main(int argc, char** argv)
 {
     int status = AICS_ERR_NONE;
 
-    AicConfigData_t config;
+    AicConfigData_t config = {  .socketInfo = {0} };
     status = ParseArgs(config, argc, argv);
     CHECK_STATUS(status);
 
-    auto handler = std::make_unique<CmdHandler>(config.ymlFileName, config.contentFileName, &config.socketInfo);
+    auto handler = std::make_unique<CmdHandler>(config);
     status = handler->Init();
     CHECK_STATUS(status);
 

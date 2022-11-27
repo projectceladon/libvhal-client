@@ -38,14 +38,6 @@
 
 #define DEFAULT_GFX_DEVICE "/dev/dri/renderD128"
 
-GfxHandler::GfxHandler(const char* deviceStr)
-{
-    if (deviceStr)
-        m_device_str = deviceStr;
-    else
-        m_device_str = DEFAULT_GFX_DEVICE;
-}
-
 GfxHandler::~GfxHandler()
 {
     for (auto it = m_boList.begin(); it != m_boList.end();)
@@ -100,27 +92,28 @@ GfxStatus GfxHandler::GetDrmParam(unsigned long request, int* val)
    return RunIoctl(DRM_IOCTL_I915_GETPARAM, &gp);
 }
 
-GfxStatus GfxHandler::GfxInit()
+GfxStatus GfxHandler::GfxInit(std::string deviceString)
 {
     int sts = GFX_OK;
     int mmap_gtt_version = -1;
 
+    m_device_str = deviceString;
     if(m_device_str.empty())
     {
-        std::cout << "Error: Empty device string in Init" << std::endl;
-        sts = GFX_FAIL;
-        goto exit_logic;
+        std::cout << "Using Default Gfx Device: " << DEFAULT_GFX_DEVICE << std::endl;
+        m_device_str = DEFAULT_GFX_DEVICE;
     }
-    else
-        std::cout << "Using device " << m_device_str << std::endl;
+
+    std::cout << "Using device " << m_device_str << std::endl;
 
     //Init device props to 0
     m_device_props = {.chipsetId = 0, .hasMMAPoffset = 0};
 
     //Open device
     m_device_fd = open(m_device_str.c_str(), O_RDWR);
-    GFX_LOG_STATUS((m_device_fd < 0), "open device");
-    if (!GFX_SUCCESS(m_device_fd < 0))
+    sts = (m_device_fd < 0) ? GFX_FAIL : GFX_OK;
+    GFX_LOG_STATUS(sts != GFX_OK, "open device");
+    if (!GFX_SUCCESS(sts))
         goto exit_logic;
 
     //Get version info
