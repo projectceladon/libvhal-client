@@ -117,10 +117,18 @@ struct AicEventMetadata_t
     AicEventCounters counts;
 };
 
+struct AicConfigData_t
+{
+    std::string ymlFileName;
+    std::string contentFileName;
+    std::string deviceString;
+    AicSocketData_t socketInfo;
+};
+
 class CmdHandler
 {
 public:
-    CmdHandler(std::string ymlFile, std::string inputFile, AicSocketData_t* info);
+    CmdHandler(AicConfigData_t& config);
     ~CmdHandler();
 
     int Init();
@@ -164,6 +172,7 @@ private:
     //INPUT File and Gfx Surface Handling
     std::string                       m_inputFileName;
     std::ifstream                     m_inputStream;
+    std::string                       m_gfxDeviceStr;
     GfxHandler                        m_gfx;
 
     //Struct holding operating surface parameters

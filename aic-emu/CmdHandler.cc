@@ -26,17 +26,19 @@ using std::chrono::duration_cast;
 using std::chrono::microseconds;
 using std::chrono::system_clock;
 
-CmdHandler::CmdHandler(std::string ymlFile, std::string inputFile, AicSocketData_t* info):
-    m_ymlFileName(ymlFile),
-    m_inputFileName(inputFile),
+CmdHandler::CmdHandler(AicConfigData_t& config):
+    m_ymlFileName(config.ymlFileName),
+    m_inputFileName(config.contentFileName),
+    m_gfxDeviceStr(config.deviceString),
     m_props(nullptr),
     m_lastDispReqSentTS(0),
     m_lastDispReqYmlTS(0),
     m_firstDispReqSentTS(0)
 {
-    if (info)
+    //Socket related data
+    if (!config.socketInfo.hwc_sock.empty())
     {
-        std::string path = info->hwc_sock;
+        std::string path = config.socketInfo.hwc_sock;
         if (path.find("/hwc-sock") == std::string::npos)
             return;
 
@@ -45,7 +47,7 @@ CmdHandler::CmdHandler(std::string ymlFile, std::string inputFile, AicSocketData
 
         if (getenv("K8S_ENV") == NULL || strcmp(getenv("K8S_ENV"), "true") != 0) {
             // docker env
-            m_UnixConnInfo.android_instance_id = info->session_id;
+            m_UnixConnInfo.android_instance_id = config.socketInfo.session_id;
         }
         else
         {
@@ -549,8 +551,7 @@ int CmdHandler::InitGfxSurfaceHandler()
         return AICS_ERR_INPUT_STREAM;
 
     GfxStatus status = GFX_OK;
-    status = m_gfx.GfxInit();
-
+    status = m_gfx.GfxInit(m_gfxDeviceStr);
     if (status)
         return AICS_ERR_GFX;
 
