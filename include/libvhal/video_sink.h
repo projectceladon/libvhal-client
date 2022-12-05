@@ -1,5 +1,3 @@
-#ifndef VIDEO_SINK_H
-#define VIDEO_SINK_H
 /**
  * @file video_sink.h
  * @author Shakthi Prashanth M (shakthi.prashanth.m@intel.com)
@@ -7,7 +5,8 @@
  * @version 0.1
  * @date 2021-04-23
  *
- * Copyright (c) 2021 Intel Corporation
+ * Copyright (c) 2021-2022 Intel Corporation
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +19,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * SPDX-License-Identifier: Apache-2.0
  */
+
+#ifndef VIDEO_SINK_H
+#define VIDEO_SINK_H
+
 #include "istream_socket_client.h"
 #include "libvhal_common.h"
 #include <functional>

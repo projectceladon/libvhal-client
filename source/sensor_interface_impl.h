@@ -1,5 +1,3 @@
-#ifndef SENSOR_INTERFACE_IMPL_H
-#define SENSOR_INTERFACE_IMPL_H
 /**
  * @file sensor_interface_impl.h
  * @author  Jaikrishna Nemallapudi (nemallapudi.jaikrishna@intel.com)
@@ -7,7 +5,7 @@
  * @version 0.1
  * @date 2021-07-22
  *
- * Copyright (c) 2021 Intel Corporation
+ * Copyright (c) 2021-2022 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +19,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * SPDX-License-Identifier: Apache-2.0
  */
+
+#ifndef SENSOR_INTERFACE_IMPL_H
+#define SENSOR_INTERFACE_IMPL_H
 
 #include "istream_socket_client.h"
 #include "sensor_interface.h"
