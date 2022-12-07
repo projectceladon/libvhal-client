@@ -5,7 +5,7 @@
  * @version 1.0
  * @date 2021-07-27
  *
- * Copyright (c) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * SPDX-License-Identifier: Apache-2.0
  */
+
 #ifndef TCP_STREAM_SOCKET_CLIENT_H
 #define TCP_STREAM_SOCKET_CLIENT_H
 
