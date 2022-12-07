@@ -1,3 +1,6 @@
+# Copyright (C) 2019-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required (VERSION 3.6)
 project (vhal-client VERSION 0.1 DESCRIPTION "VHAL Client library written in C++17 for Touch, Joystick, GPS, Audio, Camera and Sensor, " LANGUAGES CXX)
 

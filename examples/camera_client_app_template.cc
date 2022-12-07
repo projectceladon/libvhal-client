@@ -1,11 +1,12 @@
 /**
- * @file camera_client.cc
+ * @file camera_client_app_template.cc
  * @author Shakthi Prashanth M (shakthi.prashanth.m@intel.com)
  * @brief
  * @version 1.0
  * @date 2021-04-27
  *
- * Copyright (c) 2021 Intel Corporation
+ * Copyright (C) 2021-2022 Intel Corporation
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "unix_stream_socket_client.h"
