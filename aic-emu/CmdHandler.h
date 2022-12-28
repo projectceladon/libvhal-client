@@ -123,6 +123,8 @@ struct AicConfigData_t
     std::string deviceString;
     AicSocketData_t socketInfo;
     bool        manageFps;
+    unsigned int srcWidth;
+    unsigned int srcHeight;
 };
 
 class CmdHandler
@@ -132,10 +134,7 @@ public:
     ~CmdHandler();
 
     int Init();
-
     int ProcessNextEntry();
-
-
 
 private:
     //Init functions
@@ -147,8 +146,9 @@ private:
     int DecodeNode(YAML::Node& node, std::vector<std::shared_ptr<void>>& payload, AicEventMetadataPtr& metadata);
 
     //INPUT File and Gfx Surface Handling + FPS management
-    int  GetOneFrame(uint8_t* pFrame, int sizeToRead);
+    int  GetOneFrame(uint8_t* pFrame, SurfaceParams_t surf);
     void ManageDisplayReqTime(AicEventMetadataPtr& metadata);
+    bool IsDirectRead(uint32_t gfx_w=0, uint32_t gfx_h=0);
 
     //Data to ICR
     int DataExchange(std::vector<std::shared_ptr<void>>& payload, AicEventMetadataPtr& metadata);
@@ -174,6 +174,15 @@ private:
     std::ifstream                     m_inputStream;
     std::string                       m_gfxDeviceStr;
     GfxHandler                        m_gfx;
+
+    //Below parameters are required to be set to non-zero for tests where resolution changes, and for
+    //tests where the input stream resolution does not match the Input Profile resolution.
+    //-- If these are both 0, the input stream is assumed to have the dimensions for each frame accounted for.
+    //   If that is not the case, if can generate corrupt looking frames in the encoded stream
+    //-- The input stream resolution is required to be >= Max Resolution used in the Input Profile
+    //   For frames smaller this max resolution, the frame is simply cropped.
+    unsigned int                      m_srcWidth;
+    unsigned int                      m_srcHeight;
 
     //Struct holding operating surface parameters
     std::shared_ptr<cros_gralloc_handle> m_props;
