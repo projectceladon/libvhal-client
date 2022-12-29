@@ -92,6 +92,33 @@ GfxStatus GfxHandler::GetDrmParam(unsigned long request, int* val)
    return RunIoctl(DRM_IOCTL_I915_GETPARAM, &gp);
 }
 
+void GfxHandler::DetermineRenderNode()
+{
+    m_renderNode = 0;
+    if (m_device_str.empty())
+    {
+        std::cout << "Warning: Empty device string. Setting renderNode = Default(0)" << std::endl;
+        return;
+    }
+
+    //Device string is expected to be in format /dev/dri/renderD* e.g. /dev/dri/renderD129
+    //renderD128 device corresponds to renderNode=0
+
+    std::string search="/dev/dri/renderD";
+    size_t pos = m_device_str.find(search);
+    if (pos != std::string::npos)
+    {
+        std::string tmp = m_device_str.substr(pos + search.length());
+        m_renderNode = std::atoi(tmp.c_str());
+        m_renderNode -= 128;
+    }
+    else
+    {
+        std::cout << "Warning: Unexpected device string: " << m_device_str.c_str() << std::endl;
+        std::cout << "Expected: " << search.c_str() << "*. Setting renderNode = Default(0)" << std::endl;
+    }
+}
+
 GfxStatus GfxHandler::GfxInit(std::string deviceString)
 {
     int sts = GFX_OK;
@@ -104,7 +131,8 @@ GfxStatus GfxHandler::GfxInit(std::string deviceString)
         m_device_str = DEFAULT_GFX_DEVICE;
     }
 
-    std::cout << "Using device " << m_device_str << std::endl;
+    DetermineRenderNode();
+    std::cout << "Using device " << m_device_str << " .. renderNode = " << m_renderNode << std::endl;
 
     //Init device props to 0
     m_device_props = {.chipsetId = 0, .hasMMAPoffset = 0};

@@ -125,6 +125,7 @@ public:
     GfxStatus DetermineSurfaceParams(SurfaceParams_t& surf, unsigned width,
                                       unsigned height, unsigned format);
     boData_t*  GetBo(uint64_t handle);
+    unsigned  GetRenderNode() { return m_renderNode; } ;
 
 protected:
 
@@ -139,12 +140,14 @@ protected:
     int        GetMmapType(boData_t* bo_gem = nullptr);
     size_t     GetPixelSize(unsigned int format);
     unsigned   GetTilingFormat(unsigned int format);
+    void       DetermineRenderNode();
 
     // State variables
     std::string                  m_device_str;
     int                          m_device_fd;
     GfxDeviceProps_t             m_device_props;
     std::map<uint64_t, boData_t> m_boList;
+    int                          m_renderNode = 0;
 };
 #endif
 
