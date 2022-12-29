@@ -31,6 +31,7 @@ void Usage()
     std::cout << "\nNon-Mandatory options:" << std::endl;
     std::cout << "  --device <device path>   : Device path. Default /dev/dri/renderD128" << std::endl;
     std::cout << "  --instance <id num>      : Number indicating instance ID. Default 0" << std::endl;
+    std::cout << "  --manage-fps <0/1>       : Match fps with timestamps in yml log. Default Enabled(1)" << std::endl;
     return;
 }
 
@@ -67,6 +68,12 @@ int ParseArgs(AicConfigData_t& config, int argc, char** argv)
             if (++idx >= argc)
                 break;
             config.socketInfo.hwc_sock = std::string(argv[idx]);
+        }
+        else if (std::string("--manage-fps") == argv[idx])
+        {
+            if (++idx >= argc)
+                break;
+            config.manageFps = (atoi(argv[idx]) == 1) ? true : false;
         }
         else if (std::string("--instance") == argv[idx])
         {
@@ -108,7 +115,7 @@ int main(int argc, char** argv)
 {
     int status = AICS_ERR_NONE;
 
-    AicConfigData_t config = {  .socketInfo = {0} };
+    AicConfigData_t config = {  .socketInfo = {0} , .manageFps = true };
     status = ParseArgs(config, argc, argv);
     CHECK_STATUS(status);
 

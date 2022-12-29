@@ -122,6 +122,7 @@ struct AicConfigData_t
     std::string contentFileName;
     std::string deviceString;
     AicSocketData_t socketInfo;
+    bool        manageFps;
 };
 
 class CmdHandler
@@ -178,6 +179,7 @@ private:
     std::shared_ptr<cros_gralloc_handle> m_props;
 
     //fps management
+    bool                              m_manageFps;
     unsigned long                     m_lastDispReqSentTS;
     unsigned long                     m_lastDispReqYmlTS;
     unsigned long                     m_firstDispReqSentTS;

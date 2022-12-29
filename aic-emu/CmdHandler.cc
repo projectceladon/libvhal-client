@@ -31,6 +31,7 @@ CmdHandler::CmdHandler(AicConfigData_t& config):
     m_inputFileName(config.contentFileName),
     m_gfxDeviceStr(config.deviceString),
     m_props(nullptr),
+    m_manageFps(config.manageFps),
     m_lastDispReqSentTS(0),
     m_lastDispReqYmlTS(0),
     m_firstDispReqSentTS(0)
@@ -163,7 +164,7 @@ int CmdHandler::SendFDs(boData_t* bo_data)
 
 void CmdHandler::ManageDisplayReqTime(AicEventMetadataPtr& metadata)
 {
-    if (m_lastDispReqSentTS == 0)
+    if (!m_manageFps || m_lastDispReqSentTS == 0)
         return;
 
     long int waitTime = metadata->timeStampUs - m_lastDispReqYmlTS;
