@@ -86,7 +86,6 @@ struct AicSocketData_t
     int session_id; //server session Id
     int user_id;    //user Id
     std::string hwc_sock; //socket path
-    int android_instance_id;
 };
 
 

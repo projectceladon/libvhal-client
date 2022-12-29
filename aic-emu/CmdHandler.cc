@@ -38,22 +38,17 @@ CmdHandler::CmdHandler(AicConfigData_t& config):
     //Socket related data
     if (!config.socketInfo.hwc_sock.empty())
     {
-        std::string path = config.socketInfo.hwc_sock;
-        if (path.find("/hwc-sock") == std::string::npos)
-            return;
+        m_UnixConnInfo.socket_dir = config.socketInfo.hwc_sock;
+    }
 
-        size_t pos = path.find("/hwc-sock");
-        m_UnixConnInfo.socket_dir = path.substr(0, pos);
-
-        if (getenv("K8S_ENV") == NULL || strcmp(getenv("K8S_ENV"), "true") != 0) {
-            // docker env
-            m_UnixConnInfo.android_instance_id = config.socketInfo.session_id;
-        }
-        else
-        {
-            // k8s env
-            m_UnixConnInfo.android_instance_id = -1; //dont need id for k8s env
-        }
+    if (getenv("K8S_ENV") == NULL || strcmp(getenv("K8S_ENV"), "true") != 0) {
+        // docker env
+        m_UnixConnInfo.android_instance_id = config.socketInfo.session_id;
+    }
+    else
+    {
+        // k8s env
+        m_UnixConnInfo.android_instance_id = -1; //dont need id for k8s env
     }
 }
 
@@ -83,7 +78,6 @@ int CmdHandler::InitSocket()
     }
     else
     {
-        sockPath += HWC_UNIX_SOCKET;
         if (m_UnixConnInfo.android_instance_id >= 0) {
             sockPath += std::to_string(m_UnixConnInfo.android_instance_id);
         }

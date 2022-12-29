@@ -27,9 +27,10 @@ void Usage()
     std::cout << "\nMandatory options:" << std::endl;
     std::cout << "  --cmd <yml file path>    : Path of YML file containing AiC cmd sequence" << std::endl;
     std::cout << "  --content <clip path>    : Path of clip to serve as content" << std::endl;
-    std::cout << "  --hwc-sock <socketpath>  : Path of Unix Socket file" << std::endl;
+    std::cout << "  --hwc-sock <socket path> : Path of Unix Socket file. Note Instance ID (default 0) is appended internally." << std::endl;
     std::cout << "\nNon-Mandatory options:" << std::endl;
     std::cout << "  --device <device path>   : Device path. Default /dev/dri/renderD128" << std::endl;
+    std::cout << "  --instance <id num>      : Number indicating instance ID. Default 0" << std::endl;
     return;
 }
 
@@ -66,11 +67,12 @@ int ParseArgs(AicConfigData_t& config, int argc, char** argv)
             if (++idx >= argc)
                 break;
             config.socketInfo.hwc_sock = std::string(argv[idx]);
-
-            //Make rest of fields 0
-            config.socketInfo.session_id = 0;
-            config.socketInfo.user_id = 0;
-            config.socketInfo.android_instance_id = 0;
+        }
+        else if (std::string("--instance") == argv[idx])
+        {
+            if (++idx >= argc)
+                break;
+            config.socketInfo.session_id = atoi(argv[idx]);
         }
         else
         {
