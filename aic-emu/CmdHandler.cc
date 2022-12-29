@@ -188,6 +188,7 @@ int CmdHandler::Xchng_DisplayRequest(std::vector<std::shared_ptr<void>>& payload
         return AICS_ERR_PAYLOAD_EMPTY;
 
     auto evInfo = std::static_pointer_cast<buffer_info_event_t, void>(payload[0]);
+    evInfo->event.renderNode = m_gfx.GetRenderNode(); //Override with device being used
 
     // Check if payload data is consistent
     int requestSize = evInfo->event.size - sizeof(display_event_t);
@@ -264,6 +265,8 @@ int CmdHandler::DataExchange(std::vector<std::shared_ptr<void>>& payload, AicEve
 
             //send display_event_t
             auto event = std::static_pointer_cast<display_event_t>(payload[0]);
+            event->renderNode = m_gfx.GetRenderNode(); //Override with device being used
+
             status = WriteIntoSocket(event.get(), sizeof(display_event_t));
             CHECK_STATUS(status);
             break;
@@ -273,6 +276,8 @@ int CmdHandler::DataExchange(std::vector<std::shared_ptr<void>>& payload, AicEve
             AIC_LOG();
             //send display_event_t + buffer_info_t + cros_gralloc_handle + Special FDs msg
             auto evInfo = std::static_pointer_cast<buffer_info_event_t, void>(payload[0]);
+            evInfo->event.renderNode = m_gfx.GetRenderNode(); //Override with device being used
+
             auto grallocHandle = std::static_pointer_cast<cros_gralloc_handle, void>(payload[1]);
             m_props = grallocHandle;
             std::cout << "width = " << m_props->width << " , height = " << m_props->height << std::endl;
@@ -305,6 +310,7 @@ int CmdHandler::DataExchange(std::vector<std::shared_ptr<void>>& payload, AicEve
             AIC_LOG();
             //send display_event_t + buffer_info_t
             auto evInfo = std::static_pointer_cast<buffer_info_event_t, void>(payload[0]);
+            evInfo->event.renderNode = m_gfx.GetRenderNode(); //Override with device being used
 
             status = WriteIntoSocket(&evInfo->event, sizeof(display_event_t));
             CHECK_STATUS(status);
