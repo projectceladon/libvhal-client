@@ -297,7 +297,8 @@ int CmdHandler::DataExchange(std::vector<std::shared_ptr<void>>& payload, AicEve
             std::cout << "fds = " << m_props->base.numFds << ", numInts - " << m_props->base.numInts << std::endl;
 
             SurfaceParams_t surf;
-            m_gfx.DetermineSurfaceParams(surf, m_props->width, m_props->height, m_props->format);
+            status = InitGfxSurfaceParams(surf);
+            CHECK_STATUS(status);
 
             status = m_gfx.AllocateBo(surf, evInfo->info.remote_handle);
             CHECK_STATUS((int)status);
@@ -642,4 +643,34 @@ int CmdHandler::GetOneFrame(uint8_t* pFrame, SurfaceParams_t surf)
         delete [] src;
 
     return AICS_ERR_NONE;
+}
+
+int CmdHandler::InitGfxSurfaceParams(SurfaceParams_t& surf)
+{
+    if (m_props->width == 0 || m_props->height == 0 || m_props->format == 0)
+    {
+        std::cout << "Error: Unexpected surface parameter: width = " << m_props->width
+                  << ", height = " << m_props->height << ", format = " << m_props->format << std::endl;
+
+        return AICS_ERR_GFX;
+    }
+
+    memset(&surf, 0, sizeof(SurfaceParams_t));
+
+    surf.width  = m_props->width;
+    surf.height = m_props->height;
+    surf.format = m_props->format;
+    surf.pitch  = m_props->strides[0];
+
+    surf.tilingFormat  = m_props->tiling_mode; //will be overridden by adjust function
+    surf.alignedWidth  = m_props->aligned_width;
+    surf.alignedHeight = m_props->aligned_height;
+
+    //Adjust params as required by gfx driver
+    int sts = m_gfx.AdjustSurfaceParams(surf);
+
+    if (sts)
+        return AICS_ERR_GFX;
+    else
+        return AICS_ERR_NONE;
 }
