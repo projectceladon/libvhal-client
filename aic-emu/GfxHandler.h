@@ -122,8 +122,7 @@ public:
     GfxStatus ClearBo(uint64_t handle, bool erase = true);
     GfxStatus Copy(boData_t* dstData, const void* srcBuf);
 
-    GfxStatus DetermineSurfaceParams(SurfaceParams_t& surf, unsigned width,
-                                      unsigned height, unsigned format);
+    GfxStatus AdjustSurfaceParams(SurfaceParams_t& surf);
     boData_t*  GetBo(uint64_t handle);
     unsigned  GetRenderNode() { return m_renderNode; } ;
 
