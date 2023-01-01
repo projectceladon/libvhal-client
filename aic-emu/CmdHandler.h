@@ -153,6 +153,7 @@ private:
     //Data to ICR
     int DataExchange(std::vector<std::shared_ptr<void>>& payload, AicEventMetadataPtr& metadata);
     int Xchng_DisplayRequest(std::vector<std::shared_ptr<void>>& payload, AicEventMetadataPtr& metadata);
+    int InitGfxSurfaceParams(SurfaceParams_t& surf);
 
     //Socket related Functions
     int WriteIntoSocket(void* data, uint32_t sizeInBytes);
