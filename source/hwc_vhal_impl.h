@@ -504,7 +504,7 @@ public:
                 AIC_LOG(mDebug, "Failed to read display control info: %s\n", strerror(errno));
                 return -1;
             }
-            m_pLog->AddDisplayControlStruct(&ctrl, 2);
+            m_pLog->AddDisplayControlStruct(&ctrl, 1);
         }
 
         cros_gralloc_handle_t handle = get_handle(ev.info.remote_handle);
