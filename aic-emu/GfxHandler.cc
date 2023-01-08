@@ -223,88 +223,22 @@ GfxStatus GfxHandler::GfxClose()
     return sts;
 }
 
-GfxStatus GfxHandler::DetermineSurfaceParams(SurfaceParams_t& surf, unsigned width, unsigned height, unsigned format)
+GfxStatus GfxHandler::AdjustSurfaceParams(SurfaceParams_t& surf)
 {
-    if (width == 0 || height == 0 || format == 0)
+
+    //This function is meant to make any adjustments to Gfx surface settings as required
+    //by the Gfx Driver stack.
+    if (surf.width == 0 || surf.height == 0 || surf.format == 0)
     {
-        std::cout << "Error: Unexpected surface parameter: width = " << width
-                  << ", height = " << height << ", format = " << format << std::endl;
+        std::cout << "Error: Unexpected surface parameter: width = " << surf.width
+                  << ", height = " << surf.height << ", format = " << surf.format << std::endl;
 
         return GFX_FAIL;
     }
 
-	uint32_t horizontal_alignment = 4;
-	uint32_t vertical_alignment = 4;
-
-    memset(&surf, 0, sizeof(SurfaceParams_t));
-
-    surf.width  = width;
-    surf.height = height;
-    surf.format = format;
-    surf.pitch  = surf.width;
-
-    surf.tilingFormat = GetTilingFormat(format);
-
-    switch (surf.tilingFormat)
-    {
-    default:
-    case I915_TILING_NONE:
-        horizontal_alignment = 64;
-        break;
-
-    case I915_TILING_X:
-        horizontal_alignment = 512;
-        vertical_alignment = 8;
-        break;
-
-    case I915_TILING_Y:
-        horizontal_alignment = 128;
-        vertical_alignment = 32;
-        break;
-    }
-
-    /*
-	 * The alignment calculated above is based on the full size luma plane and to have chroma
-	 * planes properly aligned with subsampled formats, we need to multiply luma alignment by
-	 * subsampling factor.
-	 */
-	switch (surf.format)
-    {
-	case DRM_FORMAT_YVU420_ANDROID:
-	case DRM_FORMAT_YVU420:
-		horizontal_alignment *= 2;
-
-	case DRM_FORMAT_NV12:
-		vertical_alignment *= 2;
-		break;
-
-    case DRM_FORMAT_NV12_Y_TILED_INTEL:
-        vertical_alignment = 64;
-        break;
-
-    default:
-        break;
-	}
-
-	surf.alignedHeight = ALIGN(surf.height, vertical_alignment);
-
-    surf.alignedWidth = ALIGN(surf.width, horizontal_alignment);
-
-    surf.pitch = surf.alignedWidth;
-
-    surf.pixelSize = GetPixelSize(surf.format);
-
-    surf.totalSize = surf.alignedWidth * surf.alignedHeight * surf.pixelSize;
-
-    /*
-	 * Quoting Mesa ISL library:
-	 *
-	 *    - For linear surfaces, additional padding of 64 bytes is required at
-	 *      the bottom of the surface. This is in addition to the padding
-	 *      required above.
-	 */
-	if (surf.tilingFormat == I915_TILING_NONE)
-		surf.totalSize += 64;
+    surf.tilingFormat = GetTilingFormat(surf.format);
+    surf.pixelSize    = GetPixelSize(surf.format);
+    surf.totalSize    = surf.pitch * surf.height * surf.pixelSize;
 
 	return GFX_OK;
 }
@@ -441,8 +375,13 @@ GfxStatus GfxHandler::Copy(boData_t* dstData, const void* srcBuf)
     std::string errString;
 
     SurfaceParams_t surf = dstData->surf;
-    size_t sizeDstPerRow = surf.pitch * surf.pixelSize;
+    size_t sizeDstPerRow = surf.pitch; //already in bytes
     size_t sizeSrcPerRow = surf.width * surf.pixelSize;
+
+#ifdef __DEBUG
+    printf("%s: Line %d (%s): surf: {w = %d, h = %d, p = %d}\n",
+           __FILE__, __LINE__, __FUNCTION__, surf.width, surf.height, surf.pitch);
+#endif
 
     //Map buffer for CPU write
     sts = MmapBo(dstData, true);
@@ -456,7 +395,7 @@ GfxStatus GfxHandler::Copy(boData_t* dstData, const void* srcBuf)
     uint8_t* src = (uint8_t*) srcBuf;
     for (unsigned i = 0; i < surf.height; i++)
     {
-        memcpy(dst, src, sizeDstPerRow);
+        memcpy(dst, src, sizeSrcPerRow);
         dst += sizeDstPerRow;
         src += sizeSrcPerRow;
     }
