@@ -308,6 +308,7 @@ public:
         should_continue_ = false;
         ams_talker_thread_.join();
         acs_talker_thread_.join();
+        ftc_talker_thread_.join();
     }
 
     IOResult SendDataPacket(MsgType msg_type, const uint8_t* message, size_t size)
