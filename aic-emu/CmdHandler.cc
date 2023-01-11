@@ -30,6 +30,8 @@ CmdHandler::CmdHandler(AicConfigData_t& config):
     m_ymlFileName(config.ymlFileName),
     m_inputFileName(config.contentFileName),
     m_gfxDeviceStr(config.deviceString),
+    m_srcWidth(config.srcWidth),
+    m_srcHeight(config.srcHeight),
     m_props(nullptr),
     m_manageFps(config.manageFps),
     m_lastDispReqSentTS(0),
@@ -180,6 +182,17 @@ void CmdHandler::ManageDisplayReqTime(AicEventMetadataPtr& metadata)
         usleep(remainingWaitUs);
 }
 
+bool CmdHandler::IsDirectRead(uint32_t gfx_w, uint32_t gfx_h)
+{
+    // Return true if user hasn't provided a content width and height (assumed to match profile)
+    // Return true if user-provided content dimension match the dimensions of the GfxSurf indicated by profile
+
+    if ((m_srcWidth == 0 && m_srcHeight == 0) || (m_srcWidth == gfx_w && m_srcHeight == gfx_h))
+        return true;
+    else
+        return false;
+}
+
 int CmdHandler::Xchng_DisplayRequest(std::vector<std::shared_ptr<void>>& payload, AicEventMetadataPtr& metadata)
 {
     // send display_event_t + buffer_info_t (+ optional display_control_t)
@@ -211,7 +224,7 @@ int CmdHandler::Xchng_DisplayRequest(std::vector<std::shared_ptr<void>>& payload
     size_t sizeToRead = surf.width * surf.height * surf.pixelSize;
     uint8_t* pFrame = new uint8_t[sizeToRead];
 
-    status = GetOneFrame(pFrame, sizeToRead);
+    status = GetOneFrame(pFrame, surf);
     CHECK_STATUS(status);
 
     // Copy data to GPU memory indicated by file-descriptor
@@ -284,7 +297,8 @@ int CmdHandler::DataExchange(std::vector<std::shared_ptr<void>>& payload, AicEve
             std::cout << "fds = " << m_props->base.numFds << ", numInts - " << m_props->base.numInts << std::endl;
 
             SurfaceParams_t surf;
-            m_gfx.DetermineSurfaceParams(surf, m_props->width, m_props->height, m_props->format);
+            status = InitGfxSurfaceParams(surf);
+            CHECK_STATUS(status);
 
             status = m_gfx.AllocateBo(surf, evInfo->info.remote_handle);
             CHECK_STATUS((int)status);
@@ -551,6 +565,12 @@ int CmdHandler::InitGfxSurfaceHandler()
     if (! m_inputStream.good())
         return AICS_ERR_INPUT_STREAM;
 
+    if (!IsDirectRead() && (m_srcWidth == 0 || m_srcHeight == 0))
+    {
+        std::cout << "Error: Both srcwidth, srcheight should be supplied and non-zero" << std::endl;
+        return AICS_ERR_STREAM_PARAMS;
+    }
+
     GfxStatus status = GFX_OK;
     status = m_gfx.GfxInit(m_gfxDeviceStr);
     if (status)
@@ -560,10 +580,9 @@ int CmdHandler::InitGfxSurfaceHandler()
 }
 
 
-int CmdHandler::GetOneFrame(uint8_t* pFrame, int bytesToRead)
+int CmdHandler::GetOneFrame(uint8_t* pFrame, SurfaceParams_t surf)
 {
-    if (!m_inputStream.good())
-        return AICS_ERR_INPUT_STREAM;
+    size_t bytesToRead = surf.width * surf.height * surf.pixelSize;
 
     if (!pFrame)
         return AICS_ERR_NULL_PTR;
@@ -571,14 +590,87 @@ int CmdHandler::GetOneFrame(uint8_t* pFrame, int bytesToRead)
     if (bytesToRead <= 0)
         return AICS_ERR_STREAM_PARAMS;
 
-    m_inputStream.read((char *)pFrame, bytesToRead);
-
-    //Loop over if meeting EoF
-    if (m_inputStream.eof())
+    if (!m_inputStream.good())
     {
-        m_inputStream.clear();
-        m_inputStream.seekg(0, m_inputStream.beg);
+        //Loop over if meeting EoF. Else return.
+        if (m_inputStream.eof())
+        {
+            m_inputStream.clear();
+            m_inputStream.seekg(0, m_inputStream.beg);
+        }
+
+        //If stream is still not good, return error
+        if (!m_inputStream.good())
+            return AICS_ERR_INPUT_STREAM;
     }
 
+    //Early exit if direct read
+    if (IsDirectRead())
+    {
+        m_inputStream.read((char *)pFrame, bytesToRead);
+        return AICS_ERR_NONE;
+    }
+
+    //Return Error if dimensions are not correct
+    if (m_srcWidth < surf.width || m_srcHeight < surf.height)
+    {
+        std::cout << "Src Image(" << m_srcWidth << "x" << m_srcHeight << ") "
+                  << "is smaller than Gfx surface dimensions("
+                  << surf.width << "x" << surf.height << ")" << std::endl;
+
+        return AICS_ERR_STREAM_PARAMS;
+    }
+
+    unsigned srcStride = m_srcWidth * surf.pixelSize; //Content file
+    unsigned dstStride = surf.width * surf.pixelSize; //CPU Buffer to copy to gfx surface
+
+    auto src = new uint8_t[srcStride];
+    auto dst = pFrame;
+
+    unsigned row = 0;
+    for (; row < surf.height; row++)
+    {
+        m_inputStream.read((char *)src, srcStride);
+        memcpy(dst, src, dstStride);
+        dst += dstStride;
+    }
+
+    //Read the rest of the rows to point to correct address for next frame
+    for (;row < m_srcHeight; row++)
+        m_inputStream.read((char *)src, srcStride);
+
+    if (src)
+        delete [] src;
+
     return AICS_ERR_NONE;
+}
+
+int CmdHandler::InitGfxSurfaceParams(SurfaceParams_t& surf)
+{
+    if (m_props->width == 0 || m_props->height == 0 || m_props->format == 0)
+    {
+        std::cout << "Error: Unexpected surface parameter: width = " << m_props->width
+                  << ", height = " << m_props->height << ", format = " << m_props->format << std::endl;
+
+        return AICS_ERR_GFX;
+    }
+
+    memset(&surf, 0, sizeof(SurfaceParams_t));
+
+    surf.width  = m_props->width;
+    surf.height = m_props->height;
+    surf.format = m_props->format;
+    surf.pitch  = m_props->strides[0];
+
+    surf.tilingFormat  = m_props->tiling_mode; //will be overridden by adjust function
+    surf.alignedWidth  = m_props->aligned_width;
+    surf.alignedHeight = m_props->aligned_height;
+
+    //Adjust params as required by gfx driver
+    int sts = m_gfx.AdjustSurfaceParams(surf);
+
+    if (sts)
+        return AICS_ERR_GFX;
+	else
+        return AICS_ERR_NONE;
 }

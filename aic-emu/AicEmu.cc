@@ -32,6 +32,8 @@ void Usage()
     std::cout << "  --device <device path>   : Device path. Default /dev/dri/renderD128" << std::endl;
     std::cout << "  --instance <id num>      : Number indicating instance ID. Default 0" << std::endl;
     std::cout << "  --manage-fps <0/1>       : Match fps with timestamps in yml log. Default Enabled(1)" << std::endl;
+    std::cout << "  --src-res <WidthxHeight> : Resolution of source content in 'WxH' units (in pixels units)\n"
+              << "                             Default: WxH interpreted from AIC cmd profile" << std::endl;
     return;
 }
 
@@ -80,6 +82,34 @@ int ParseArgs(AicConfigData_t& config, int argc, char** argv)
             if (++idx >= argc)
                 break;
             config.socketInfo.session_id = atoi(argv[idx]);
+        }
+        else if (std::string("--src-res") == argv[idx])
+        {
+            if (++idx >= argc)
+                break;
+            std::string srcRes(argv[idx]);
+            size_t pos = srcRes.find('x');
+            try
+            {
+                if (pos == std::string::npos) //not found
+                    throw std::invalid_argument("Unexpected src-res format");
+
+                std::string tmp = srcRes.substr(0, pos);
+                if (tmp.empty())
+                    throw std::invalid_argument("Unexpected src-res format");
+                config.srcWidth = atoi(tmp.c_str());
+
+                tmp = srcRes.substr(pos+1);
+                if (tmp.empty())
+                    throw std::invalid_argument("Unexpected src-res format");
+                config.srcHeight = atoi(tmp.c_str());
+            }
+            catch(const std::invalid_argument& e)
+            {
+                std::cout << "Warning: " << e.what() << " .. (Given: " << srcRes.c_str()
+                          << ") .. Proceeding with profile defaults" << std::endl;
+                config.srcWidth = config.srcHeight = 0;
+            }
         }
         else
         {
