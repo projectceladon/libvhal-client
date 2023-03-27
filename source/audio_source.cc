@@ -39,7 +39,7 @@ AudioSource::AudioSource(TcpConnectionInfo tcp_conn_info, AudioCallback callback
 {
     auto tcp_sock_client =
       std::make_unique<TcpStreamSocketClient>(tcp_conn_info.ip_addr,
-      LIBVHAL_AUDIO_PLAYBACK_PORT);
+      tcp_conn_info.port ? tcp_conn_info.port : LIBVHAL_AUDIO_PLAYBACK_PORT);
     impl_ = std::make_unique<Impl>(std::move(tcp_sock_client), callback, user_id);
 }
 
