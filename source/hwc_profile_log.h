@@ -90,6 +90,8 @@ public:
     {
         m_logFilePath = (fname != nullptr) ? fname : DEFAULT_LOGFILE_NAME;
     }
+    ProfileLogger(const ProfileLogger&) = delete;
+    ProfileLogger & operator=(const ProfileLogger&) = delete;
 
     ~ProfileLogger()
     {

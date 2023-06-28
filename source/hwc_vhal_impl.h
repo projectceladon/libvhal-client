@@ -47,15 +47,15 @@ class VirtualHwcReceiver::Impl
 public:
     Impl(unique_ptr<IStreamSocketClient> unix_sock_client, ConfigInfo info, HwcHandler handler): socket_client_{move(unix_sock_client)}, mInfo{move(info)}, mHwcHandler{move(handler)}
     {
-        AIC_LOG(mDebug, "info.video_res_width: %d", info.video_res_width);
-        AIC_LOG(mDebug, "info.video_res_height: %d", info.video_res_height);
-        AIC_LOG(mDebug, "info.video_device: %s", info.video_device.c_str());
-        AIC_LOG(mDebug, "info.user_id: %d", info.user_id);
-        AIC_LOG(mDebug, "info.unix_conn_info.socket_dir: %s", info.unix_conn_info.socket_dir.c_str());
-        AIC_LOG(mDebug, "info.unix_conn_info.android_instance_id: %d", info.unix_conn_info.android_instance_id);
+        AIC_LOG(mDebug, "info.video_res_width: %d", mInfo.video_res_width);
+        AIC_LOG(mDebug, "info.video_res_height: %d", mInfo.video_res_height);
+        AIC_LOG(mDebug, "info.video_device: %s", mInfo.video_device.c_str());
+        AIC_LOG(mDebug, "info.user_id: %d", mInfo.user_id);
+        AIC_LOG(mDebug, "info.unix_conn_info.socket_dir: %s", mInfo.unix_conn_info.socket_dir.c_str());
+        AIC_LOG(mDebug, "info.unix_conn_info.android_instance_id: %d", mInfo.unix_conn_info.android_instance_id);
 
         m_pLog = std::make_unique<ProfileLogger>();
-        m_pLog->Initialize(info.video_res_width, info.video_res_height);
+        m_pLog->Initialize(mInfo.video_res_width, mInfo.video_res_height);
     }
 
     ~Impl()
@@ -291,33 +291,33 @@ public:
 
                     switch (ev.type) {
                         case VHAL_DD_EVENT_DISPINFO_REQ:
-                          if (checkDispConfig(ev.id, ev.renderNode) == -1) {
-                            goto error;
-                          }
-                          AIC_LOG(mDebug, "VHAL_DD_EVENT_DISPINFO_REQ\n");
-                          UpdateDispConfig(socket_client_->GetNativeSocketFd());
-                          break;
+                            if (checkDispConfig(ev.id, ev.renderNode) == -1) {
+                                m_pLog->ReleaseMutex();
+                                goto error;
+                            }
+                            AIC_LOG(mDebug, "VHAL_DD_EVENT_DISPINFO_REQ\n");
+                            UpdateDispConfig(socket_client_->GetNativeSocketFd());
+                            break;
                         case VHAL_DD_EVENT_DISPPORT_REQ:
-                          AIC_LOG(mDebug, "VHAL_DD_EVENT_DISPPORT_REQ\n");
-                          UpdateDispPort(socket_client_->GetNativeSocketFd());
-                          break;
+                            AIC_LOG(mDebug, "VHAL_DD_EVENT_DISPPORT_REQ\n");
+                            UpdateDispPort(socket_client_->GetNativeSocketFd());
+                            break;
                         case VHAL_DD_EVENT_CREATE_BUFFER:
-                          AIC_LOG(mDebug, "VHAL_DD_EVENT_CREATE_BUFFER\n");
-                          if (ev.size == sizeof(buffer_info_event_t) + sizeof(cros_gralloc_handle)) {
-                              CreateBuffer(socket_client_->GetNativeSocketFd());
-                          }
-                          break;
+                            AIC_LOG(mDebug, "VHAL_DD_EVENT_CREATE_BUFFER\n");
+                            if (ev.size == sizeof(buffer_info_event_t) + sizeof(cros_gralloc_handle)) {
+                                CreateBuffer(socket_client_->GetNativeSocketFd());
+                            }
+                            break;
                         case VHAL_DD_EVENT_REMOVE_BUFFER:
-                          AIC_LOG(mDebug, "VHAL_DD_EVENT_REMOVE_BUFFER\n");
-                          RemoveBuffer(socket_client_->GetNativeSocketFd());
-                          break;
+                            AIC_LOG(mDebug, "VHAL_DD_EVENT_REMOVE_BUFFER\n");
+                            RemoveBuffer(socket_client_->GetNativeSocketFd());
+                            break;
                         case VHAL_DD_EVENT_DISPLAY_REQ:
-                          //AIC_LOG(mDebug, "VHAL_DD_EVENT_DISPLAY_REQ\n");
-                          DisplayRequest(socket_client_->GetNativeSocketFd(), ev.size - sizeof(ev));
-                          break;
+                            //AIC_LOG(mDebug, "VHAL_DD_EVENT_DISPLAY_REQ\n");
+                            DisplayRequest(socket_client_->GetNativeSocketFd(), ev.size - sizeof(ev));
+                            break;
                         default:
-                          AIC_LOG(mDebug, "VHAL_DD_EVENT_<unknown>: ev.type=%d\n", ev.type);
-                          break;
+                            AIC_LOG(mDebug, "VHAL_DD_EVENT_<unknown>: ev.type=%d\n", ev.type);
                     } // end of switch
 
                     m_pLog->ReleaseMutex();
