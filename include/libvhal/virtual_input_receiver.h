@@ -41,6 +41,8 @@ public:
      */
     VirtualInputReceiver(struct UnixConnectionInfo uci);
     virtual ~VirtualInputReceiver();
+    VirtualInputReceiver(VirtualInputReceiver &) = delete;
+    VirtualInputReceiver& operator = (VirtualInputReceiver &) = delete;
 
     bool     getTouchInfo(TouchInfo* info) override;
     IOResult onInputMessage(const std::string& msg) override;

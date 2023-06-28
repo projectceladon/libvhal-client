@@ -57,6 +57,8 @@ public:
      */
     VirtualGpsReceiver(struct TcpConnectionInfo tci, GpsCommandHandler gch);
     ~VirtualGpsReceiver();
+    VirtualGpsReceiver(VirtualGpsReceiver &) = delete;
+    VirtualGpsReceiver& operator = (VirtualGpsReceiver &) = delete;
 
     /**
      * @brief Connect to remote endpoint.
@@ -120,7 +122,7 @@ private:
     GpsCommandHandler            mGpsCmdHandler = nullptr;
     int                          mSockGps       = -1;
     static const char*           kGpsSock;
-    volatile Command             mCommand;
+    volatile Command             mCommand = kGpsStop;
     std::unique_ptr<std::thread> mWorkThread;
     std::mutex                   mMutex;
     bool                         mStop = false;

@@ -40,8 +40,8 @@ const std::string VirtualGpsReceiver::gpsStopMsg = "{ \"key\" : \"gps-stop\" }";
 const unsigned int VirtualGpsReceiver::mDebug    = 0;
 
 VirtualGpsReceiver::VirtualGpsReceiver(struct TcpConnectionInfo tci, GpsCommandHandler gch) 
-  : mTci(tci),
-    mGpsCmdHandler{ move(gch) }
+  : mTci(std::move(tci)),
+    mGpsCmdHandler{ std::move(gch) }
 {
     mWorkThread = std::unique_ptr<std::thread>(
       new std::thread(&VirtualGpsReceiver::workThreadProc, this));
