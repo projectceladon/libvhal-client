@@ -46,6 +46,8 @@ extern "C"
 using namespace std;
 using namespace chrono_literals;
 
+#define CMD_CHANNEL_MSG_SIZE_MAX 65536
+
 namespace vhal {
 namespace client {
 
@@ -99,7 +101,7 @@ public:
                             reinterpret_cast<uint8_t*>(&msg_length),
                             sizeof(int));
                         int received = std::get<0>(ior);
-                        if (received != sizeof(int) || msg_length <= 0) {
+                        if (received != sizeof(int) || msg_length <= 0 || msg_length > CMD_CHANNEL_MSG_SIZE_MAX) {
                             cout << "Failed to read message from Activity Monitor Service: "
                                  << std::get<1>(ior)
                                  << ", going to disconnect and reconnect.\n";
@@ -179,7 +181,7 @@ public:
                             reinterpret_cast<uint8_t*>(&msg_length),
                             sizeof(int));
                         int received = std::get<0>(ior);
-                        if (received != sizeof(int) || msg_length <= 0) {
+                        if (received != sizeof(int) || msg_length <= 0 || msg_length > CMD_CHANNEL_MSG_SIZE_MAX) {
                             cout << "Failed to read message from Aic Command Service: "
                                  << std::get<1>(ior)
                                  << ", going to disconnect and reconnect.\n";
@@ -259,7 +261,7 @@ public:
                           reinterpret_cast<uint8_t*>(&msg_length),
                           sizeof(int));
                         int received = std::get<0>(ior);
-                        if (received != sizeof(int) || msg_length <= 0) {
+                        if (received != sizeof(int) || msg_length <= 0 || msg_length > CMD_CHANNEL_MSG_SIZE_MAX) {
                             cout << "Failed to read message from Aic Command "
                                     "Service: "
                                  << std::get<1>(ior)
