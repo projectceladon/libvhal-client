@@ -551,7 +551,7 @@ main(int argc, char* argv[])
 
     struct UnixConnectionInfo uci;
     uci.socket_dir            = kDevNameId;
-    VirtualInputReceiver* vir = new VirtualInputReceiver(uci);
+    VirtualInputReceiver* vir = new VirtualInputReceiver(std::move(uci));
     if ((debug & 0x1) > 0)
         printf("\t%s:%d Remote input test:\n", __func__, __LINE__);
 

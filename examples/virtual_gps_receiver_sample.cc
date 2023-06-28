@@ -309,10 +309,11 @@ injection_gps_data_thread(void* args)
 
             // geo fix <longitude value> <latitude value>
             ret = do_geo_fix(lat_long);
-        } else { // ToDo
+        }
+        /* Example of inject nmea:
             char nmea[] = "";
             ret         = do_geo_nmea(nmea);
-        }
+        */
 
         if (ret < 0) {
             printf("%s Error: %d %s. Quit.\n", __func__, ret, strerror(errno));
@@ -397,7 +398,7 @@ main(int argc, char* argv[])
             case 's':
                 p_opt_arg = optarg;
                 strncpy(server_ip, p_opt_arg, sizeof(server_ip) - 1);
-                server_ip[sizeof(server_ip) -1] = '\0';
+                server_ip[sizeof(server_ip) - 1] = '\0';
                 break;
             case 'p':
                 p_opt_arg = optarg;
@@ -431,7 +432,7 @@ main(int argc, char* argv[])
     while (flag) {
         memset(str, 0, sizeof(str));
         printf("%s Please input comand('q' for quit):", __func__);
-	char *ret = fgets(str, 1, stdin);
+        char* ret = fgets(str, 1, stdin);
         if (ret == NULL) {
             printf("%s Fail to get input. Continue. \n", __func__);
             continue;
