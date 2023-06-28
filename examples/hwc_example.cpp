@@ -31,24 +31,18 @@ using namespace vhal::client;
 void cmd_handler(CommandType cmd, const frame_info_t* frame)
 {
     switch (cmd) {
-
         case FRAME_CREATE:
             printf("event %s\n", "FRAME_CREATE");
-	    break;
-
-	case FRAME_REMOVE:
+            break;
+        case FRAME_REMOVE:
             printf("event %s\n", "FRAME_REMOVE");
-	    break;
-
+            break;
         case FRAME_DISPLAY:
             //printf("event %s\n", "FRAME_DISPLAY");
-	    // dont print huge log here
-	    break;
-
+            // dont print huge log here
+            break;
         default:
             printf("event %s\n", "unknown event");
-            break;
-
     } // end of switch
 }
 
@@ -81,47 +75,44 @@ int main(int argc, char* argv[])
     videoPipe = dpipe_lookup("video-0"))
     */
 
-    //create hwc receiver
-    VirtualHwcReceiver* receiver = new VirtualHwcReceiver(cfg, cmd_handler);
-    IOResult ior = receiver->start();
-    int index = 0;
-    while (!std::get<0>(ior)) {
-        index ++;
+    try {
+        //create hwc receiver
+        std::unique_ptr<VirtualHwcReceiver> receiver = std::make_unique<VirtualHwcReceiver>(cfg, cmd_handler);
+        IOResult ior = receiver->start();
+        int index = 0;
+        while (!std::get<0>(ior)) {
+            index ++;
 
-        if (index % 300 == 0) {
-            printf("tag: index(%d)\n", index);
-        }
+            if (index % 300 == 0) {
+                printf("tag: index(%d)\n", index);
+            }
 
-        if (index == 3600) {
-            printf("tag: index, (%s)!!\n", "setmode");
-            IOResult ior = receiver->setMode(1920, 1080);
-	     int res = std::get<0>(ior);
-	     if (res<0) {
-	         printf("tag: setMode(%s)\n", "failed");
-	     } else {
-	         printf("tag: setMode(%s)\n", "successfully");
-	     }
-        }
+            if (index == 3600) {
+                printf("tag: index, (%s)!!\n", "setmode");
+                IOResult ior = receiver->setMode(1920, 1080);
+                int res = std::get<0>(ior);
+                if (res<0) {
+                    printf("tag: setMode(%s)\n", "failed");
+                } else {
+                    printf("tag: setMode(%s)\n", "successfully");
+                }
+            } else if (index == 5000) {
+                IOResult ior = receiver->stop();
+                int res = std::get<0>(ior);
+                if (res<0) {
+                    printf("tag: stop(%s)\n", "failed");
+                } else {
+                    printf("tag: stop(%s)\n", "successfully");
+                }
+            } else if (index == 6000) {
+                break;
+            }
 
-        if (index == 5000) {
-            IOResult ior = receiver->stop();
-             int res = std::get<0>(ior);
-             if (res<0) {
-                 printf("tag: stop(%s)\n", "failed");
-             } else {
-                 printf("tag: stop(%s)\n", "successfully");
-             }
+            this_thread::sleep_for(5ms);
         }
-
-        if (index == 6000) {
-            delete receiver;
-            receiver = NULL;
-        }
-        this_thread::sleep_for(5ms);
+    } catch (std::exception const& ex) {
+        std::cout << "Error:" << ex.what() << std::endl;
     }
-
-    if (receiver != NULL)
-        delete receiver;
     return 0;
 
 }
