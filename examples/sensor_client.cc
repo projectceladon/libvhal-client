@@ -70,13 +70,18 @@ int main(int argc, char** argv)
         mSensorMap.insert({ctrlPkt.type, ctrlPkt.enabled});
     };
     /* Create sensor Interface with LibVHAL */
-    sensorHALIface = std::make_unique<SensorInterface>(conn_info, callback, -1);
+    try {
+        sensorHALIface = std::make_unique<SensorInterface>(conn_info, callback, -1);
+    } catch (const std::exception& excp) {
+        cout << "Caught exception: " << excp.what() << endl;
+        return 0;
+    }
 
     /* Start a thread to send dummy sensor data for ACCELEROMETER sensor*/
     thread sensor_thread;
     sensor_thread = thread([&event, &sensorHALIface] () {
         while (true) {
-            for (auto it : mSensorMap) {
+            for (auto &it : mSensorMap) {
                 if (it.first == SENSOR_TYPE_ACCELEROMETER) {
                     if (it.second) {
                         event.type = SENSOR_TYPE_ACCELEROMETER;

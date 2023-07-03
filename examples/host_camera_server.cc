@@ -69,46 +69,40 @@ typedef struct stream_ctx_t
 } stream_ctx_t;
 
 stream_ctx_t *stream_ctx;
-
-char device_index[] = "/dev/video0";
-int width = 640;
-int height = 480;
-int fps = 30;
 AVPacket *pkt;
 
 #define BUF_COUNT 4
 unsigned int buf_count = 0;
 unsigned char *buf_list[BUF_COUNT];
 
-void get_all_dev_nodes()
+std::string get_available_video_device()
 {
-    int fd;
-    struct v4l2_capability video_cap;
-    char dev_name[50];
     for(int devId = 0; devId < 64; devId++) {
-        sprintf(dev_name, "/dev/video%d", devId);
-
-        if((fd = open(dev_name, O_RDONLY)) == -1) {
+        int fd;
+        struct v4l2_capability video_cap = {};
+        std::string dev_name = "/dev/video" + to_string(devId);
+        if((fd = open(dev_name.c_str(), O_RDONLY)) == -1) {
             continue;
-	}
-
-        if(ioctl(fd, VIDIOC_QUERYCAP, &video_cap) == -1)
-            cout <<"cam_info: Can't get capabilities\n";
-        else {
-	    if(!strcmp((const char*)video_cap.driver, "v4l2 loopback"))
-	        strncpy(device_index, dev_name, 11);
         }
-        close(fd);
-    }
 
+        if(ioctl(fd, VIDIOC_QUERYCAP, &video_cap) == -1) {
+            cout <<"cam_info: Can't get capabilities\n";
+            close(fd);
+            continue;
+        }
+
+        close(fd);
+        if(!strcmp((const char*)video_cap.driver, "v4l2 loopback"))
+            return dev_name;
+    }
+    return NULL;
 }
 
-void dumpFrame(unsigned char *bufdest) {
+void dumpFrame(unsigned char *bufdest, int width, int height) {
     FILE* pFile;
-    char file_name[100] = "output";
     unsigned int img_id = buf_count % 8;
-    sprintf(file_name, "%d.yuv", img_id);
-    pFile = fopen(file_name,"wb");
+    std:: string file_name = "output" + to_string(img_id) + ".yuv";
+    pFile = fopen(file_name.c_str(),"wb");
 
     if (pFile ){
         fwrite(bufdest,1,width * height * 1.5,pFile);
@@ -142,8 +136,6 @@ struct pixel_NV21_uv_plane{
 void
 yuyv422_to_yuv420sp(unsigned char *bufsrc, unsigned char *dst_buf, int width, int height, bool flipuv)
 {
-    int i,j;
-
     volatile struct pixel_yvuv* src;
     volatile struct pixel_NV21_y_plane* dst_p1;
     volatile struct pixel_NV21_uv_plane* dst_p2;
@@ -156,8 +148,8 @@ yuyv422_to_yuv420sp(unsigned char *bufsrc, unsigned char *dst_buf, int width, in
     unsigned int v_plane = (height*width) + (height * width * 0.25);
     dst_p3 = (struct pixel_NV21_uv_plane*) (dst_buf + v_plane); /* offset to UV plane */
 
-    for(i=1; i<=height; i++) {
-        for(j=1; j<=width/2; j++) {
+    for(int i = 1; i <= height; i++) {
+        for(int j = 1; j <= width/2; j++) {
             if(j%2) {
                 dst_p1->Y0 = src->Y0;
                 dst_p1->Y1 = src->Y1;
@@ -193,13 +185,13 @@ const char *get_device_family()
   const char *device_family = "avfoundation";
 #elif __linux__
   const char *device_family;
-	  device_family = "v4l2";
+          device_family = "v4l2";
 #endif
 
   return device_family;
 }
 
-int init_device_and_input_context(stream_ctx_t *stream_ctx, const char *device_family, const char *device_index, int width, int height, int fps)
+int init_device_and_input_context(stream_ctx_t *stream_ctx, std::string &device_family, std::string &dev_video, int width, int height, int fps)
 {
 
     int ret_code = 0;
@@ -207,14 +199,14 @@ int init_device_and_input_context(stream_ctx_t *stream_ctx, const char *device_f
     std::string fps_str = std::to_string(fps);
     std::string size = std::to_string(width) + std::string("x") + std::to_string(height);
 
-    stream_ctx->ifmt = (AVInputFormat *)av_find_input_format(device_family);
+    stream_ctx->ifmt = (AVInputFormat *)av_find_input_format(device_family.c_str());
     AVDictionary *options = NULL;
     av_dict_set(&options, "video_size", size.c_str(), 0);
     av_dict_set(&options, "framerate", fps_str.c_str(), 0);
     av_dict_set(&options, "pixel_format", "yuv420p", 0);
     av_dict_set(&options, "probesize", "7000000", 0);
 
-    if (avformat_open_input(&stream_ctx->ifmt_ctx, device_index, stream_ctx->ifmt, &options) != 0)
+    if (avformat_open_input(&stream_ctx->ifmt_ctx, dev_video.c_str(), stream_ctx->ifmt, &options) != 0)
     {
         fprintf(stderr, "cannot initialize input device!\n");
         ret_code = 1;
@@ -238,7 +230,7 @@ int init_device_and_input_context(stream_ctx_t *stream_ctx, const char *device_f
         ret_code = 1;
     }
 
-    return 0;
+    return ret_code;
 }
 
 
@@ -272,14 +264,14 @@ void set_codec_params(stream_ctx_t *stream_ctx, int width, int height, int fps)
     }
 }
 
-int open_camera()
+int open_camera(std::string &dev_video, int width, int height, int fps)
 {
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 9, 100)
     av_register_all();
 #endif
     avdevice_register_all();
 
-    const char *device_family = get_device_family();
+    std::string device_family = get_device_family();
 
     stream_ctx = (stream_ctx_t *)malloc(sizeof(stream_ctx_t));
     if(!stream_ctx)
@@ -291,7 +283,7 @@ int open_camera()
     stream_ctx->out_stream = NULL;
     stream_ctx->out_codec_ctx = NULL;
 
-    if (init_device_and_input_context(stream_ctx, device_family, device_index, width, height, fps) != 0)
+    if (init_device_and_input_context(stream_ctx, device_family, dev_video, width, height, fps) != 0)
     {
         return -1;
     }
@@ -306,7 +298,6 @@ int open_camera()
     stream_ctx->out_stream->codecpar->extradata = stream_ctx->out_codec_ctx->extradata;
     stream_ctx->out_stream->codecpar->extradata_size = stream_ctx->out_codec_ctx->extradata_size;
 
-    AVFrame *frame = av_frame_alloc();
     AVFrame *outframe = av_frame_alloc();
     pkt = av_packet_alloc();
 
@@ -319,15 +310,12 @@ int open_camera()
     stream_ctx->in_codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
     outframe->format = stream_ctx->out_codec_ctx->pix_fmt;
 
-    struct SwsContext *swsctx = sws_getContext(stream_ctx->in_codec_ctx->width, stream_ctx->in_codec_ctx->height,
-           stream_ctx->in_codec_ctx->pix_fmt, stream_ctx->out_codec_ctx->width, stream_ctx->out_codec_ctx->height,
-           stream_ctx->out_codec_ctx->pix_fmt, SWS_BICUBIC, NULL, NULL, NULL);
     av_init_packet(pkt);
     buf_count = 0;
     //create buffer
     const size_t inbuf_size = width * height * 1.5;
     for(int count = 0; count < BUF_COUNT; count++)
-	    buf_list[count] = (unsigned char*)calloc(1, inbuf_size);
+        buf_list[count] = (unsigned char*)calloc(1, inbuf_size);
 
     return 0;
 }
@@ -335,13 +323,20 @@ int main(int argc, char** argv)
 {
     atomic<bool> stop = true;
     int          instance_id = 3;
+    int          width = 640;
+    int          height = 480;
+    int          fps = 30;
     thread       file_src_thread;
     atomic<bool> request_negotiation = false;
 
-	//search for virtual device nodes
-    get_all_dev_nodes();
+    //search for virtual device nodes
+    std::string dev_video = get_available_video_device();
+    if (dev_video.empty()) {
+        cout << "There are no active camera devices available" << endl;
+        return 0;
+    }
 
-    cout <<"open camera " << device_index;
+    cout <<"open camera " << dev_video;
 
     shared_ptr<VideoSink>   video_sink;
 
@@ -356,8 +351,7 @@ int main(int argc, char** argv)
                     cout << "Received Open command from Camera VHal\n";
                     stop = false;
                     file_src_thread = thread([&stop,
-                                              &video_sink,
-                                              &device_index]() {
+                                              &video_sink, &width, &height]() {
 
                        const size_t inbuf_size = width * height * 1.5;
                         while (!stop) {
@@ -398,28 +392,26 @@ int main(int argc, char** argv)
                     break;
             }
         });
-
     } catch (const std::exception& ex) {
         cout << "VideoSink creation error :"
              << ex.what() << endl;
         exit(1);
     }
 
-    cout << "Waiting Camera Open callback..\n" << device_index;
-    open_camera();
+    cout << "Waiting Camera Open callback..\n" << dev_video;
+    open_camera(dev_video, width, height, fps);
 
-        if (!request_negotiation) {
-            video_sink->GetCameraCapabilty();
+    if (!request_negotiation) {
+        video_sink->GetCameraCapabilty();
+        std::vector<VideoSink::camera_info_t> camera_info(NUM_OF_CAMERAS_REQUESTED);
 
-            std::vector<VideoSink::camera_info_t> camera_info(NUM_OF_CAMERAS_REQUESTED);
-
-            for (int i = 0; i < NUM_OF_CAMERAS_REQUESTED; i++) {
-                camera_info[i].codec_type = VideoSink::VideoCodecType::kI420;
-                camera_info[i].resolution = VideoSink::FrameResolution::k480p;
-            }
-            video_sink->SetCameraCapabilty(camera_info);
-            request_negotiation = true;
+        for (int i = 0; i < NUM_OF_CAMERAS_REQUESTED; i++) {
+            camera_info[i].codec_type = VideoSink::VideoCodecType::kI420;
+            camera_info[i].resolution = VideoSink::FrameResolution::k480p;
         }
+        video_sink->SetCameraCapabilty(camera_info);
+        request_negotiation = true;
+    }
     // we need to be alive :)
     while (true) {
         this_thread::sleep_for(5ms);

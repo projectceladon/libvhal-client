@@ -48,6 +48,9 @@ public:
     }
     ~Impl() { Close(); }
 
+    Impl(Impl &) = delete;
+    Impl& operator = (Impl &) = delete;
+
     ConnectionResult Connect()
     {
         std::string error_msg = "";
@@ -75,7 +78,7 @@ public:
 
         ssize_t sent;
         if ((sent = ::send(fd_, data, size, 0)) == -1) {
-            std::cout << ". Send() args: fd: " << fd_ << ", data: " << data
+            std::cout << ". Send() args: fd: " << fd_ << ", sent: " << sent
                       << ", size: " << size << "\n";
             error_msg = std::strerror(errno);
         }
@@ -89,8 +92,8 @@ public:
         while (left > 0 ) {
             ssize_t received = ::recv(fd_,data, left,0);
             if (received <= 0) {
-                std::cout << ". Recv() args: fd: " << fd_ << ", data: " << data
-                      << ", size: " << size << "\n";
+                std::cout << ". Recv() args: fd: " << fd_ << ", received: " << received
+                      << ", expected size: " << size << "\n";
                 error_msg = std::strerror(errno);
                 break;
             }
