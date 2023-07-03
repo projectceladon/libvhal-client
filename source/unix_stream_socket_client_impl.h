@@ -50,6 +50,8 @@ public:
         strncpy(remote_.sun_path, remote_server_socket_path.c_str(), sizeof(remote_.sun_path) -1);
     }
     ~Impl() { Close(); }
+    Impl(Impl &) = delete;
+    Impl& operator = (Impl &) = delete;
 
     ConnectionResult Connect()
     {
@@ -81,7 +83,7 @@ public:
 
         ssize_t sent;
         if ((sent = ::send(fd_, data, size, 0)) == -1) {
-            std::cout << ". Send() args: fd: " << fd_ << ", data: " << data
+            std::cout << ". Send() args: fd: " << fd_ << ", sent: " << sent
                       << ", size: " << size << "\n";
             error_msg = std::strerror(errno);
         }
@@ -94,8 +96,8 @@ public:
 
         ssize_t received;
         if ((received = ::recv(fd_, data, size, 0)) == -1) {
-            std::cout << ". Recv() args: fd: " << fd_ << ", data: " << data
-                      << ", size: " << size << "\n";
+            std::cout << ". Recv() args: fd: " << fd_ << ", received: " << received
+                      << ", expected size: " << size << "\n";
             error_msg = std::strerror(errno);
         }
         return { received, error_msg };
