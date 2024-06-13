@@ -19,9 +19,13 @@
 
 #include "CmdHandler.h"
 
+static bool g_logEnable = true;
+
 int GetEventCode(std::string str)
 {
-    std::cout << str << "@@@@@@@@@" << std::endl;
+    if (g_logEnable)
+        std::cout << str << "@@@@@@@@@" << std::endl;
+
     int event = 0;
 
     if (str == "VHAL_DD_EVENT_DISPINFO_REQ")
@@ -50,6 +54,16 @@ int GetEventCode(std::string str)
         return VHAL_DD_EVENT_SETUP_RESOLUTION;
 
     return event;
+}
+
+void YAML::SetParserLogFlag(bool value)
+{
+    g_logEnable = value;
+}
+
+bool YAML::GetParserLogFlag()
+{
+    return g_logEnable;
 }
 
 bool YAML::convert<AicEventMetadataPtr>::decode(const YAML::Node& node, AicEventMetadataPtr &mptr)
