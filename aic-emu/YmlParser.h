@@ -91,5 +91,9 @@ namespace YAML
     template <> struct convert<DisplayCtrlPtr> {
         static bool decode(const Node& node, DisplayCtrlPtr &mptr);
     };
+
+    bool GetParserLogFlag();
+
+    void SetParserLogFlag(bool value);
 }
 #endif
